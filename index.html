@@ -2,10 +2,9 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>ШЕЛУПОНЬ-ПРОТОКОЛ 3000 — билд 2.13.001</title>
+<title>ШЕЛУПОНЬ-ПРОТОКОЛ 3000 — билд 2.20.000</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <style>
-  /* ============ БАЗА ============ */
   *{box-sizing:border-box;margin:0;padding:0;user-select:none}
   html,body{width:100%;height:100%;overflow:hidden;background:#000}
   body{font-family:'VT323',monospace;color:#000}
@@ -18,11 +17,21 @@
     50%{background:#00ff66;color:#a00}75%{background:#0066ff;color:#ff0}100%{background:#ff004c;color:#0ff}}
   @keyframes pop{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-56px);opacity:0}}
   @keyframes pt{to{transform:translate(var(--dx),var(--dy));opacity:0}}
-  /* лента: текст позиционирован абсолютно и ездит в % ширины контейнера —
-     нулевое влияние на раскладку */
   @keyframes mq{from{left:100%}to{left:-260%}}
+  @keyframes arenaBreathe{0%,100%{opacity:.32;transform:scale(1)}50%{opacity:.6;transform:scale(1.05)}}
+  @keyframes dangerPulse{0%,100%{opacity:.25}50%{opacity:.55}}
+  @keyframes pHurt{0%,100%{transform:translateX(0);filter:none}
+    20%{transform:translateX(-7px);filter:brightness(2.2) sepia(1) hue-rotate(-50deg) saturate(6)}
+    60%{transform:translateX(6px);filter:brightness(1.4)}}
+  @keyframes pSmug{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px) scale(1.06)}}
+  @keyframes pGlitch{0%,100%{filter:none;transform:translate(0)}
+    20%{filter:invert(1);transform:translate(-5px,2px)}
+    45%{filter:hue-rotate(120deg);transform:translate(5px,-3px)}
+    70%{filter:invert(1) contrast(2);transform:translate(-3px,-2px)}}
+  @keyframes pDie{to{opacity:0;filter:blur(7px);transform:scale(.5) rotate(10deg)}}
+  @keyframes cardIn{from{transform:translateX(70px) translateY(24px) rotate(9deg);opacity:0}
+    to{transform:none;opacity:1}}
 
-  /* ============ СЦЕНА 1920×1080 ============ */
   #stage{width:1920px;height:1080px;position:absolute;transform-origin:0 0;
     display:grid;grid-template-rows:64px 1fr 44px;gap:8px;padding:8px;
     background:#000 radial-gradient(circle at 50% 20%,#0a0a2e,#000 75%)}
@@ -31,12 +40,12 @@
   .track{position:absolute;left:0;right:0;height:20px;z-index:61;pointer-events:none;opacity:.3;
     background:linear-gradient(#fff0,#fff4 50%,#fff0);animation:tr 4s linear infinite}
   #stage.fast .track{animation-duration:1.2s}
+  #stage.danger .track{animation-duration:.6s}
   .rec{position:absolute;top:14px;right:20px;color:#f00;font-family:'Press Start 2P';
     font-size:10px;z-index:62;animation:bl 1s steps(2) infinite}
   #shade{position:absolute;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(3px);
     z-index:84;display:none}
 
-  /* ============ РЕЖИМ «Я ЭПИЛЕПТИК» ============ */
   #stage.epi .vhs,#stage.epi .track,#stage.epi .rec{display:none}
   #stage.epi .fl{animation:none}
   #stage.epi .hit{animation:none;background:#b00020;color:#fff}
@@ -44,8 +53,10 @@
   #stage.epi #main.shk{animation:none}
   #stage.epi .win{box-shadow:none}
   #stage.epi #tapeTxt{animation:none;left:8px}
+  #stage.epi #arena::before{animation:none;opacity:.4}
+  #stage.epi #arena::after{animation:none;opacity:.4}
+  #stage.epi .portrait.hurt,#stage.epi .portrait.smug,#stage.epi .portrait.glitch{animation:none}
 
-  /* ============ ОКНА WIN95 ============ */
   .win{background:#c0c0c0;border:2px solid;border-color:#fff #404040 #404040 #fff;
     display:flex;flex-direction:column;min-height:0;
     box-shadow:4px 4px 0 rgba(255,0,255,.3),-4px 4px 0 rgba(0,255,255,.2)}
@@ -64,29 +75,39 @@
   .chip.f{background:#000;color:#0f0}.chip.l{background:#fff8dc;outline:2px solid #d4a017}
   .fl{animation:bl .3s steps(2) infinite}
 
-  /* ============ КНОПКИ ============ */
+  .loopstep{display:flex;gap:9px;align-items:flex-start;margin:7px 0;position:relative;
+    padding-bottom:7px;border-bottom:1px dotted #999}
+  .loopstep:last-child{border-bottom:none}
+  .loopstep .num{width:22px;height:22px;border-radius:50%;background:#000;color:#0f0;
+    font-family:'Press Start 2P';font-size:10px;display:flex;align-items:center;
+    justify-content:center;flex:0 0 auto;margin-top:2px}
+  .loopstep .ico{font-size:22px;flex:0 0 auto;line-height:1}
+  .loopstep .txt{flex:1;min-width:0}
+  .loopstep .tt{font-weight:bold;font-size:18px;color:#111}
+  .loopstep .td{font-size:15px;color:#444;line-height:1.12}
+
   .b95{font-family:'VT323';font-size:21px;background:#c0c0c0;border:2px outset #fff;
     padding:3px 12px;cursor:pointer;flex:0 0 auto}
   .b95:active{border-style:inset}
   .b95[disabled]{border-style:inset;color:#808080;cursor:not-allowed}
+  .craft-ready{animation:rb .8s linear infinite;color:#000} /* подсветка доступного крафта */
+  .skipbtn{width:58px;height:148px;font-size:26px;display:flex;align-items:center;justify-content:center}
   .hit{font-family:'Press Start 2P';font-size:15px;padding:12px 34px;border:3px outset #fff;
     cursor:pointer;transition:transform .15s;animation:rb .8s linear infinite;flex:0 0 auto}
   #stage.fast .hit{animation-duration:.3s}
-  .hit:hover{transform:scale(.5)} /* бесит по ТЗ */
+  .hit:hover{transform:scale(.5)}
   #stage.noannoy .hit:hover{transform:none}
   .hit[disabled]{animation:none;background:#808080;color:#ddd;cursor:not-allowed;border-color:#555}
 
-  /* ============ СЕТКА ЭКРАНА ============ */
   #hdr{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:stretch}
   #main{display:grid;grid-template-columns:410px 1fr 410px;gap:8px;min-height:0}
   #main.shk{animation:shk .35s}
-  #center{display:grid;grid-template-rows:64px 236px 66px 190px 1fr;gap:8px;min-height:0}
-  #right{display:grid;grid-template-rows:repeat(3,auto);gap:8px;min-height:0;align-content:start}
+  #center{display:grid;grid-template-rows:64px 240px 66px 190px 1fr;gap:8px;min-height:0}
+  #right{display:grid;grid-template-rows:repeat(4,auto);gap:8px;min-height:0;align-content:start}
   #handrow,#actrow{display:flex;flex-direction:row;align-items:center;gap:10px;padding:6px 10px}
   #handrow{gap:14px;justify-content:center}
   #actrow{justify-content:center}
 
-  /* HUD */
   .hud{display:flex;flex-direction:column;justify-content:center;padding:4px 12px}
   .hud .nm{font-family:'Press Start 2P';font-size:9px;margin-bottom:3px}
   .tbar{height:18px;border:2px inset #fff;background:#000}
@@ -96,12 +117,9 @@
   #et i.bossy{background:repeating-linear-gradient(90deg,#a0f,#608 8px)}
   #et i.snort{background:repeating-linear-gradient(90deg,#0f6,#084 8px)}
   .tv{font-size:20px;margin-top:2px}
-  #logo{display:flex;flex-direction:column;justify-content:center;align-items:center;color:#fff}
+  #logo{display:flex;align-items:center;justify-content:center;color:#fff}
   #logo h1{font-family:'Press Start 2P';font-size:15px;text-shadow:2px 2px 0 #f0f,-2px -2px 0 #0ff}
-  #logo .sub{font-size:17px;color:#8ff;margin-top:3px;text-align:center}
-  #logo .ev{color:#ff0}
 
-  /* OPS.CENTER: эффекты · статистика · лента (лента раскладку не трогает) */
   #opsbd{display:flex;flex-direction:column;justify-content:center;gap:3px;
     padding:3px 10px;font-size:16px;overflow:hidden;line-height:1.1}
   #opsTop,#opsBot{display:flex;align-items:center;gap:8px;overflow:hidden;white-space:nowrap}
@@ -110,6 +128,8 @@
   .ochip.hot{background:#ffd0c0}
   .ochip.worm{background:#c8ffc8}
   .ochip.boss{background:#e0c0ff}
+  .ochip.rage{background:#ff5252;color:#fff}
+  .ochip.ob{background:#cfe8ff}
   #opsStats{flex:0 0 auto;color:#222}
   .tape{flex:1 1 0;min-width:0;overflow:hidden;position:relative;height:24px;
     border:1px inset #fff;background:#ded9cf}
@@ -117,7 +137,6 @@
     animation:mq 14s linear infinite;will-change:left}
   #nextEv{flex:0 0 auto;color:#555}
 
-  /* карты */
   .cd{width:82px;height:148px;border:2px solid #000;background:#fffef0;cursor:pointer;
     display:flex;flex-direction:column;align-items:center;justify-content:space-between;
     padding:5px 3px;transition:transform .12s;flex:0 0 auto;box-shadow:3px 3px 0 #0008}
@@ -127,23 +146,59 @@
   .cd.sel:hover{transform:translateY(-14px)}
   .cd.ff5{outline:3px solid #f00;box-shadow:0 0 14px #f00}
   .cd.leg{outline:3px double #d4a017;background:#fff8dc}
+  .cd.enter{animation:cardIn .4s ease-out}
   .cd .ic{font-size:30px}
   .cd .cn{font-family:'Press Start 2P';font-size:7px;text-align:center;line-height:1.3}
   .cd .cp{font-family:'Press Start 2P';font-size:16px}
   .cd.f-ШЕЛ{background:#c8f4ff}.cd.f-АРТ{background:#fff3b0}.cd.f-ЧРВ{background:#c8ffc8}
+  .cd.f-МУС{background:#b6b6b6}
+  .cd.f-VPN{background:#cfe8ff}
   .cd.leg.f-ШЕЛ,.cd.leg.f-АРТ,.cd.leg.f-ЧРВ{background:#fff8dc}
   .cd.f-F5{background:#000;color:#0f0;border-color:#0f0;animation:gl .3s steps(2) infinite}
   .cd.f-F5 .cp{color:#f00}
-  .back{width:44px;height:64px;background:repeating-linear-gradient(45deg,#000080 0 6px,#1084d0 6px 12px);
-    border:2px solid #fff;flex:0 0 auto}
 
-  /* арена */
+  #arena{position:relative;display:flex;align-items:center;justify-content:center;gap:22px;
+    overflow:hidden;padding:6px;
+    background:radial-gradient(circle at 50% 40%,var(--arenaGlow,#0a1830) 0%,#000 78%)}
+  #arena::before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(circle at 50% 45%,var(--arenaGlow,#0a1830) 0%,transparent 72%);
+    opacity:.4;animation:arenaBreathe 6s ease-in-out infinite}
+  #arena::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;display:none;
+    background:radial-gradient(circle at 50% 50%,transparent 45%,rgba(255,0,0,.5) 100%);
+    animation:dangerPulse 1s ease-in-out infinite}
+  #stage.danger #arena::after{display:block}
+  #arena .slot,#arena .portrait,#arena .vsmid{position:relative;z-index:1}
   .slot{width:150px;height:212px;border:3px dashed #666;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;background:#0002;font-size:18px;text-align:center;padding:6px}
+    align-items:center;justify-content:center;background:#0004;font-size:18px;text-align:center;padding:6px;
+    color:#fff;text-shadow:1px 1px 0 #000}
   .slot .big{font-size:44px}
-  .slot .pn{font-family:'Press Start 2P';font-size:8px;margin:6px 0}
-  .slot .pw{font-family:'Press Start 2P';font-size:26px;color:#a00}
-  #arena{position:relative}
+  .slot .pn{font-family:'Press Start 2P';font-size:8px;margin:6px 0;color:#fff}
+  .slot .pw{font-family:'Press Start 2P';font-size:26px;color:#ff6b6b;text-shadow:1px 1px 0 #000}
+  .slot .mini{color:#9ad}
+  #stage.targeting #eslot{border-color:#0f0;box-shadow:0 0 14px #0f07}
+  #stage.targeting #arena,#stage.targeting .slot,#stage.targeting #eface{
+    cursor:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><circle cx="14" cy="14" r="8" fill="none" stroke="%2300ff66" stroke-width="2"/><path d="M14 2v6M14 20v6M2 14h6M20 14h6" stroke="%2300ff66" stroke-width="2"/></svg>') 14 14, crosshair}
+  .portrait{width:150px;height:212px;border:3px solid #444;background:#05050a;
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+    position:relative;overflow:hidden}
+  .portrait .plabel{font-family:'Press Start 2P';font-size:8px;color:#0f0;margin-top:4px;z-index:2}
+  .portrait .pimg{width:132px;height:132px;display:flex;align-items:center;justify-content:center;margin-top:4px}
+  .portrait.hurt{animation:pHurt .42s}
+  .portrait.smug{animation:pSmug .5s}
+  .portrait.glitch{animation:pGlitch .42s}
+  .portrait.die{animation:pDie .65s forwards}
+  #pface{border-color:#2e7d32}
+  #eface{border-color:#6a1b9a}
+  #eface.rage{border-color:#ff1744;box-shadow:0 0 18px #ff1744aa}
+  .shieldwrap{position:absolute;left:4px;right:4px;bottom:4px;height:18px;background:#0a0a12;
+    border:1px solid #0ff;z-index:3;display:flex;align-items:center;overflow:hidden}
+  .shieldfill{height:100%;width:0%;transition:width .3s;
+    background:repeating-linear-gradient(90deg,#00e5ff,#0077aa 6px)}
+  .shieldtxt{position:absolute;right:4px;top:0;font-family:'Press Start 2P';font-size:8px;
+    color:#0ff;line-height:18px;text-shadow:1px 1px 0 #000}
+  .ragebar{position:absolute;left:4px;right:4px;bottom:4px;height:6px;background:#200;
+    border:1px solid #f44;z-index:3}
+  .ragebar i{display:block;height:100%;width:0%;background:#ff1744}
   #dice{font-family:'Press Start 2P';font-size:13px;background:#000;color:#0f0;
     padding:8px 14px;border:2px inset #fff;min-width:300px;text-align:center}
   #log{background:#000;color:#0f0;font-size:19px;padding:8px 12px;overflow:auto;line-height:1.25}
@@ -152,21 +207,22 @@
     animation:pop .8s ease-out forwards;z-index:5;text-shadow:2px 2px 0 #000}
   .pt{position:absolute;width:6px;height:6px;pointer-events:none;z-index:4;animation:pt .6s ease-out forwards}
 
-  /* правый бар */
   .moon{font-size:40px;text-align:center}
-  .ham{font-family:'Press Start 2P';font-size:9px;text-align:center;padding:6px;
-    background:#000;color:#ff0;border:2px inset #fff;margin-top:6px;min-height:34px}
   #benchbd{font-size:17px}
   #benchbd .bet{margin:3px 0;padding:2px 6px;font-size:17px}
+  #cagebd{font-size:17px}
+  #cagebd .bet{margin:3px 0;padding:2px 6px;font-size:17px}
+  .cageact{color:#0a0;font-weight:bold}
+  .cagehp{color:#ff6b6b}
 
-  /* ============ ТАСКБАР ============ */
+  #cardtip{position:absolute;width:280px;z-index:88;display:none;pointer-events:none}
+  #cardtip .bd{font-size:17px;padding:6px 8px;line-height:1.18}
+
   #taskbar{display:flex;flex-direction:row;align-items:center;gap:10px;padding:0 10px;
     font-size:19px;white-space:nowrap;overflow:hidden}
-  .tbtab{opacity:.7}
   .tbspacer{flex:1 1 auto}
   .led{border:1px inset #fff;padding:2px 12px;background:#d4d0c8;flex:0 0 auto}
 
-  /* ============ МЕНЮ ПУСК ============ */
   #startmenu{position:absolute;left:10px;bottom:56px;width:340px;z-index:87;display:none}
   #startmenu .bd{display:flex;flex-direction:row;gap:0;padding:0;overflow:hidden}
   .smban{writing-mode:vertical-rl;transform:rotate(180deg);background:linear-gradient(#000080,#1084d0);
@@ -177,17 +233,15 @@
   .smitem:hover{background:#000080;color:#fff}
   .smsep{border-top:2px groove #fff;margin:2px 0}
 
-  /* ============ ОВЕРЛЕИ ============ */
-  #ov,#tn,#rost,#shop,#setov,#caseov,#p2ov,#dbg{position:absolute;left:50%;top:40%;
+  #ov,#tn,#shop,#setov,#caseov,#dbg{position:absolute;left:50%;top:40%;
     transform:translate(-50%,-50%);z-index:86;display:none;pointer-events:auto}
-  #ov{width:640px}#tn{width:720px}#p2ov{width:860px}#dbg{width:600px}#caseov{width:780px}
-  #rost,#shop,#setov{width:1040px;max-height:940px;top:50%}
+  #ov{width:640px}#tn{width:720px}#dbg{width:600px}#caseov{width:780px}
+  #shop,#setov{width:1040px;max-height:940px;top:50%}
   #setov{width:760px}
   #ov .bd,#tn .bd,#caseov .bd{font-size:24px;text-align:center}
   .setrow{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:8px 0;
     border:1px inset #fff;background:#d4d0c8;padding:6px 10px}
 
-  /* ритм-диск */
   #tnwrap{display:flex;flex-direction:column;align-items:center;margin:6px 0}
   #tndisk{width:180px;height:180px;border-radius:50%;border:4px solid #0ff;position:relative;
     background:conic-gradient(#a020f0 0 25.2deg,#7fffe0 25.2deg 64.8deg,#a020f0 64.8deg 90deg,#151515 90deg 360deg)}
@@ -199,7 +253,6 @@
   #tnhead.pf{color:#0ff;text-shadow:0 0 14px #0ff;transform:scale(1.8)}
   #tnhead.ms{color:#f00;text-shadow:0 0 10px #f00;transform:scale(.8)}
 
-  /* кейс */
   #caseview{position:relative;width:660px;height:112px;margin:12px auto;overflow:hidden;
     border:3px inset #fff;background:#000}
   #casemark{position:absolute;left:50%;top:0;bottom:0;width:4px;margin-left:-2px;
@@ -210,7 +263,6 @@
   .cslot .hp{font-family:'Press Start 2P';font-size:18px}
   .cslot .hn{font-size:14px;text-align:center;line-height:1}
 
-  /* загрузка */
   #boot{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);width:760px;z-index:95}
   #boot .bd{text-align:center}
   #boot h1{font-family:'Press Start 2P';font-size:20px;margin:10px 0;
@@ -222,36 +274,41 @@
 <div id="stage">
   <div class="vhs"></div><div class="track"></div><div class="rec">● REC</div>
 
-  <!-- HUD -->
   <div id="hdr">
     <div class="win hud"><div class="nm">ТЫ / ИГРОК-1 · НЕРВНЫЕ ТИКИ</div>
       <div class="tbar" id="pt"><i style="width:100%"></i></div>
       <div class="tv" id="ptv">69 / 69</div></div>
-    <div class="win" id="logo"><h1>ШЕЛУПОНЬ-ПРОТОКОЛ 3000</h1>
-      <div class="sub">раунд <b id="turn">1</b> · <span id="moon">🌑</span> ×<span id="mx">1</span> · босс <span id="bst">—</span><br>
-      <span class="ev" id="ev">—</span></div></div>
+    <div class="win" id="logo"><h1>ШЕЛУПОНЬ-ПРОТОКОЛ 3000</h1></div>
     <div class="win hud"><div class="nm" id="enm">ВРАГ / СКРИПТ-КИД · ТИКИ</div>
       <div class="tbar" id="et"><i style="width:100%"></i></div>
       <div class="tv" id="etv">69 / 69</div></div>
   </div>
 
   <div id="main">
-    <!-- ГДД -->
-    <div class="win"><div class="tb">GDD.EXE — луп v2.13</div><div class="bd">
-      <div class="sect">ГЕЙМПЛЕЙ-ЛУП</div>
-      <ol>
-        <li>Каждый 4-й ход — <b>РИТМ-ДИСК</b>: сектор над головкой → ПРОБЕЛ/ЛКМ. Яркий центр = PERFECT. Промах мимо сектора −1 тик. Хиты ≥6/10 = +4 тика. <b>PERFECT-БОНУС</b>: 3→+4 · 4→+6 · 5→+10 · 6→+16 · 7→+24 · 8→+34 · 9→+46 · 10→+60.</li>
-        <li>Каждый 5-й ход — <b>СОБЫТИЕ</b>. Анонс и прогноз луны — в <b>OPS.CENTER</b> над ареной. d20: простое → обмен картой; составное → +гласные; 1/20 → −5.</li>
-        <li>Торги луной (−8) · <b>↕СОРТ</b> руки · <b>🔨ВЕРСТАК</b> в правом баре: крафт, ковка легендарок, разгон хомяка. <i>Ставки @/!/% заморожены до переработки.</i></li>
-        <li><b>🔥ПЕРЕГРЕВ</b>: 3 удара подряд без корзины → следующий удар ×1.5, потом −5 тиков.</li>
-        <li>Каждый 3-й ход — <b>КОРЗИНА → КЕЙС ПРИЗЫВА</b>: лента хомяков 1–20, цвет = мощь. 1 = лечит, ≥16 = отдача −3, ≥18 = легендарка (с золотым перезвоном). Кейс закрывается сам.</li>
-        <li>Комбо в корзине: две одинаковые Шелупони = <b>АПГРЕЙД +1</b> (до «10»); дуэт = +5 к хомяку; артефакты = мутант; черви = ГНЕЗДО (луна ×2). ⌨F5 в корзине = перезагрузка раунда.</li>
-        <li>БОСС 1 САТАНА (100) → БОСС 2 СЕРВЕР (130). В хотсите боссов нет.</li>
-        <li>Победа = мета-тики → МАГАЗИН. Автосейв всего. Статистика в OPS.CENTER считает <b>весь</b> урон. Стенд — <b>🐞 DEBUG</b> в таскбаре.</li>
-      </ol>
+    <div class="win"><div class="tb">ГЕЙМ-ЛУП</div><div class="bd">
+      <div class="loopstep"><span class="num">1</span><span class="ico">🎵</span>
+        <div class="txt"><div class="tt">РИТМ-ДИСК</div>
+        <div class="td">каждый 4-й ход · хиты ≥6 = +4 · центр = PERFECT-бонус · переполнение тиков → бонус урона</div></div></div>
+      <div class="loopstep"><span class="num">2</span><span class="ico">🎲</span>
+        <div class="txt"><div class="tt">КУБИК d20</div>
+        <div class="td">простое = обмен картой · составное = +гласные · 1/20 = −5</div></div></div>
+      <div class="loopstep"><span class="num">3</span><span class="ico">🌙</span>
+        <div class="txt"><div class="tt">ТОРГИ ЛУНОЙ</div>
+        <div class="td">сдвиг фазы за тики · цена 1–9, по умолчанию 5 · торговал — цена растёт</div></div></div>
+      <div class="loopstep"><span class="num">4</span><span class="ico">🃏</span>
+        <div class="txt"><div class="tt">УДАР / ПРОПУСК</div>
+        <div class="td">сила карты против врага · пропуск = 0 урона, враг бьёт в ответ</div></div></div>
+      <div class="loopstep"><span class="num">5</span><span class="ico">🗑</span>
+        <div class="txt"><div class="tt">КОРЗИНА → КЕЙС</div>
+        <div class="td">каждый 3-й ход → хомяк 1–20 · легендарка с хомяка ≥18</div></div></div>
+      <div class="loopstep"><span class="num">6</span><span class="ico">🔥</span>
+        <div class="txt"><div class="tt">ПЕРЕГРЕВ</div>
+        <div class="td">3 хода без корзины → след. удар ×1.5, потом −5</div></div></div>
+      <div class="loopstep"><span class="num">7</span><span class="ico">👹</span>
+        <div class="txt"><div class="tt">БОССЫ</div>
+        <div class="td">САТАНА 100 → СЕРВЕР 130 · ЯРОСТЬ при &lt;30% (+30% атаки)</div></div></div>
     </div></div>
 
-    <!-- СТОЛ -->
     <div id="center">
       <div class="win" id="ops"><div class="tb">OPS.CENTER — эффекты · статистика · дикторская лента</div>
         <div class="bd" id="opsbd">
@@ -264,13 +321,18 @@
         </div>
       </div>
       <div class="win"><div class="tb">ARENA.BIN</div>
-        <div class="bd" id="arena" style="display:flex;align-items:center;justify-content:center;gap:60px;overflow:hidden">
+        <div class="bd" id="arena">
+          <div class="portrait" id="pface"><span class="plabel">ТЫ</span><div class="pimg"></div>
+            <div class="shieldwrap"><div class="shieldfill" id="shieldfill"></div>
+            <span class="shieldtxt" id="shieldtxt">🛡0</span></div></div>
           <div class="slot" id="pslot"><span class="mini">твоя карта</span></div>
-          <div style="text-align:center">
+          <div class="vsmid" style="text-align:center">
             <div style="font-family:'Press Start 2P';font-size:30px" class="fl">VS</div>
             <div id="dmg" style="font-family:'Press Start 2P';font-size:12px;margin-top:14px;min-height:30px"></div>
           </div>
           <div class="slot" id="eslot"><span class="mini">карта врага</span></div>
+          <div class="portrait" id="eface"><span class="plabel">ВРАГ</span><div class="pimg"></div>
+            <div class="ragebar" id="ragebar" style="display:none"><i id="ragefill"></i></div></div>
         </div>
       </div>
       <div class="win" id="actrow">
@@ -283,47 +345,45 @@
       <div class="win" style="overflow:hidden"><div class="tb">LOG.TXT</div><div id="log"></div></div>
     </div>
 
-    <!-- ПРАВЫЙ БАР: луна → верстак → тупняк -->
     <div id="right">
       <div class="win"><div class="tb">LUNA.DAT — торги открыты</div><div class="bd">
         <div class="moon" id="moonbig">🌑</div>
         <div style="display:flex;gap:6px;justify-content:center;margin-top:4px">
-          <button class="b95" onclick="moonShift(-1)">◀ сдвиг −8</button>
-          <button class="b95" onclick="moonShift(1)">сдвиг ▶ −8</button>
+          <button class="b95" id="btnMoonL" onclick="moonShift(-1)">◀ −5</button>
+          <button class="b95" id="btnMoonR" onclick="moonShift(1)">−5 ▶</button>
         </div>
-        <div class="mini" style="text-align:center">множитель червей ×<span id="mx2">1</span></div>
+        <div class="mini" style="text-align:center">цена торгов <b id="lcost">5</b> · множитель червей ×<span id="mx2">1</span></div>
+        <div class="mini" style="text-align:center">торговал в прошлом ходу → цена +1 · нет → −1</div>
       </div></div>
-      <div class="win"><div class="tb">ВЕРСТАК.EXE — хомяк · корзина · крафт · ковка</div>
+      <div class="win"><div class="tb">ВЕРСТАК.EXE — крафт · починка хомяка</div>
         <div class="bd" id="benchbd"></div>
+      </div>
+      <div class="win"><div class="tb">ВОЛЬЕР — боевые хомяки</div>
+        <div class="bd" id="cagebd"></div>
       </div>
       <div class="win"><div class="tb">TUPNYAK.BAT</div><div class="bd">
         <div class="bar"><i id="ubr"></i></div>
-        <div class="mini">тупишь 5+ сек → растёт; 100 = цитата «Брат 2», −3 тика.</div>
       </div></div>
     </div>
   </div>
 
-  <!-- ТАСКБАР -->
   <div class="win" id="taskbar">
     <button class="b95" id="startBtn"><b>Пуск</b> Страдать</button>
-    <span class="tbtab">GDD.EXE</span>
-    <span class="tbtab">ARENA.BIN</span>
     <span class="tbspacer"></span>
     <button class="b95" onclick="toggleDbg()">🐞 DEBUG</button>
-    <span class="led" id="metaLed">💰 0 · v2.13.001</span>
+    <span class="led" id="metaLed">💰 0 · v2.20.000</span>
   </div>
 
   <div id="shade"></div>
 
-  <!-- ПУСК -->
+  <div class="win" id="cardtip"><div class="tb">ИНФО</div><div class="bd" id="ctBody"></div></div>
+
   <div class="win" id="startmenu">
     <div class="tb">ГЛАВНОЕ МЕНЮ ПРОТОКОЛА</div>
     <div class="bd">
       <div class="smban">ШЕЛУПОНЬ 3000</div>
       <div class="smit">
-        <button class="smitem" id="miRoster">📇 РОСТЕР 54</button>
         <button class="smitem" id="miShop">💰 МАГАЗИН</button>
-        <button class="smitem" id="miHot">👥 ХОТСИТ (2 игрока)</button>
         <button class="smitem" id="miSet">⚙ НАСТРОЙКИ</button>
         <button class="smitem" id="miSnd">🔊 ЗВУК: ВКЛ</button>
         <div class="smsep"></div>
@@ -332,7 +392,6 @@
     </div>
   </div>
 
-  <!-- ОВЕРЛЕИ -->
   <div class="win" id="ov"><div class="tb" id="ovt">SYSTEM</div>
     <div class="bd"><div id="ovm" style="white-space:pre-line"></div><br>
     <button class="b95" id="ovb" style="font-size:26px">OK</button>
@@ -368,13 +427,6 @@
     </div>
   </div>
 
-  <div class="win" id="p2ov"><div class="tb">ХОД ИГРОКА 2 — выбери карту (рука открыта)</div>
-    <div class="bd">
-      <div id="p2hand" style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap"></div>
-      <div class="mini" style="margin-top:8px">ставки Игрока 2 приедут в следующих билдах. луна общая, ритм-диск крутится для всех.</div>
-    </div>
-  </div>
-
   <div class="win" id="dbg"><div class="tb">DEBUG.EXE — тестовый стенд</div>
     <div class="bd">
       <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
@@ -387,11 +439,6 @@
       <div class="mini" style="margin-top:8px">стенд ничего не расходует: карты, тики и хомяки остаются при тебе.</div>
       <div style="text-align:center;margin-top:8px"><button class="b95" onclick="toggleDbg()">закрыть стенд</button></div>
     </div>
-  </div>
-
-  <div class="win" id="rost"><div class="tb">РОСТЕР.СПР — 54 карты + легендарки + ковка</div>
-    <div class="bd" id="robd"></div>
-    <div style="padding:8px;text-align:center"><button class="b95" onclick="toggleRoster()">закрыть</button></div>
   </div>
 
   <div class="win" id="shop"><div class="tb">МАГАЗИН.EXE — перки на СЛЕДУЮЩИЙ забег</div>
@@ -407,7 +454,8 @@
       <div class="setrow"><span>Быстрые анимации</span><input type="checkbox" id="cFast"></div>
       <div class="setrow"><span>Диктор комментирует бой</span><input type="checkbox" id="cAnn" checked></div>
       <div class="setrow"><span><b>Я ЭПИЛЕПТИК</b> — убрать мигание и мельтешение</span><input type="checkbox" id="cEpi"></div>
-      <div class="mini">сохраняется само. как и всё плохое.</div>
+      <div class="setrow"><span><b>СБРОСИТЬ ВСЁ</b> — полная очистка localStorage: сейв, мета, настройки</span>
+        <button class="b95" id="btnReset">💣 СБРОС</button></div>
     </div>
     <div style="padding:8px;text-align:center"><button class="b95" onclick="toggleSet()">сохранить и закрыть</button></div>
   </div>
@@ -432,7 +480,9 @@ const CFG={
   META_KEY:'shelu3000meta', SET_KEY:'shelu3000set',
   RHY:{PASSES:10,PERIOD:733,SECTOR:90,GRACE:12,PERF:40,CENTER:0.375},
   PERF_REWARD:{3:4,4:6,5:10,6:16,7:24,8:34,9:46,10:60},
-  HAM:{CAP:20,LEG_AT:18,RECOIL_AT:16,UP_COST:10,UP_STEP:2},
+  HAM:{CAP:20,LEG_AT:18,RECOIL_AT:16,CAGE_MAX:3,REPAIR_COST:10},
+  SHIELD_MAX:10, DANGER_AT:20, RAGE_AT:0.3, CRAFT_MULT:1.5,
+  LUNA_MIN:1, LUNA_MAX:9, LUNA_DEFAULT:5,
 };
 const PERSONA={1:'ДИКТОР-СТАЖЁР',2:'ВЕДУЩИЙ ПРОБОК',3:'ГОЛОС КЕФИРА',4:'ДИСПЕТЧЕР НИКУДА',
   5:'ШЁПОТ ПОДСОБКИ',6:'НОВОСТИ 1997',7:'ДИКТОР ПЫЛИ',8:'АВТООТВЕТЧИК',9:'ЛЕГЕНДА ЭФИРА',10:'ДЕСЯТКА СУДЬБЫ'};
@@ -443,21 +493,24 @@ const ART=[['💾','ДИСКЕТА «СИНЯЯ МЕТКА»',5],['💾','ДИС
   ['🖱','ПРОВОД «ШАР ОТВАЛИЛСЯ»',6],['🖱','ПРОВОД «ХВОСТ ПАМЯТИ»',6]];
 const WORM_N=['ЧЕРВЬ ПОЛНОЛУНИЯ','ЧЕРВЬ НОВОЛУНИЯ','ЧЕРВЬ-МАЖОР','ЧЕРВЬ ИЗ КОНСОЛИ','ЛИЧИНОЧНЫЙ ТРЕЙДЕР'];
 const F5_N=['F5 ЗАЕДАЕТ','F5 ЗАЛИПАЕТ','F5 ОТСВЕЧИВАЕТ','F5 БЕЗ КОМПА'];
+const JUNK_N=['Мусор: Пустая банка','Мусор: Скрепки','Мусор: Фантик','Мусор: Катышки',
+  'Мусор: Огрызок провода','Мусор: Пыльный кулер','Мусор: Битый пиксель'];
 const LEG=[['👑','ДИКТОР-ПРАЙМ',11,'ШЕЛ',''],['🕳','ГОЛОС ПУСТОТЫ',10,'ШЕЛ','steal2'],
   ['📼','КАССЕТА ИЗ 90-Х',9,'ШЕЛ','heal3'],['🏅','ЗОЛОТАЯ ДИСКЕТА',12,'АРТ',''],
   ['🏴','ПИРАТСКИЙ КОМПАКТ',10,'АРТ','pirate'],['🖲','МЫШЬ С ТУРБО',9,'АРТ','turbo'],
   ['🔮','ЧЕРВЬ-ОРАКУЛ',6,'ЧРВ',''],['🧬','ЦИФРОВОЙ СОЛИТЕР',8,'ЧРВ','heal4'],
   ['🌟','ЗОЛОТОЙ F5',0,'F5','gf5'],['⚔','F5-САМУРАЙ',7,'F5','playable']];
+/* 6 крафтов в заданном порядке; урон считается Math.round((A+B)×1.5) из ингредиентов */
 const RECIPES=[
-  {a:'ДИСКЕТА',b:'ПРОВОД',n:'МОДИФИЦИРОВАННЫЙ НАКОПИТЕЛЬ',pw:9,ic:'🛠',f:'АРТ',ex:null,desc:'сила 9'},
-  {a:'ДИСКЕТА',b:'ДИСКЕТА',n:'РЕЙД-МАССИВ',pw:11,ic:'🗄',f:'АРТ',ex:null,desc:'сила 11'},
-  {a:'CD',b:'ПРОВОД',n:'ТУРБО-ШЛЕЙФ',pw:7,ic:'🧵',f:'АРТ',ex:{l:'turbo'},desc:'сила 7, +5 с хомяком'},
+  {a:'ДИСКЕТА',b:'ДИСКЕТА',n:'РЕЙД-МАССИВ',ic:'🗄',f:'АРТ',ex:null,desc:'урон 15'},
+  {a:'ДИСКЕТА',b:'ПРОВОД',n:'МОДИФИЦИРОВАННЫЙ НАКОПИТЕЛЬ',ic:'🛠',f:'АРТ',ex:null,desc:'урон 17'},
+  {a:'ДИСКЕТА',b:'CD',n:'ГИБРИД-НАКОПИТЕЛЬ',ic:'💽',f:'АРТ',ex:{l:'heal2'},desc:'урон 18, лечит +2'},
+  {a:'ПРОВОД',b:'ПРОВОД',n:'УДЛИНИТЕЛЬ',ic:'🔌',f:'АРТ',ex:{l:'ext'},desc:'урон 18, +3 со щитом'},
+  {a:'ПРОВОД',b:'CD',n:'ТУРБО-ШЛЕЙФ',ic:'🧵',f:'АРТ',ex:{l:'turbo'},desc:'урон 20, +5 с хомяком'},
+  {a:'CD',b:'CD',n:'ЗЕРКАЛЬНЫЙ ДУЭТ',ic:'🪞',f:'АРТ',ex:null,desc:'урон 21 (чистый)'},
 ];
-const LEGREC=[
-  {a:'ДИКТОР-ПРАЙМ',b:'ГОЛОС ПУСТОТЫ',n:'ДИКТОР-АБСОЛЮТ',pw:14,ic:'🎙',f:'ШЕЛ',ex:{l:'steal2'},desc:'14, вампит 2 тика',exact:true},
-  {a:'ЗОЛОТАЯ ДИСКЕТА',b:'ПИРАТСКИЙ КОМПАКТ',n:'ЧЁРНЫЙ АРХИВ',pw:13,ic:'🗃',f:'АРТ',ex:{l:'pirate'},desc:'13, глушит спецэффект',exact:true},
-  {a:'ЧЕРВЬ-ОРАКУЛ',b:'ЦИФРОВОЙ СОЛИТЕР',n:'МАТКА-РОЯ',pw:5,ic:'👑',f:'ЧРВ',ex:{l:'heal4'},desc:'5 × луну (до 15), лечит 4',exact:true},
-];
+const SHORT={'ДИСКЕТА':'ДИСК','ПРОВОД':'ПРОВ','CD':'CD'};
+const BASEDMG={'ДИСКЕТА':5,'ПРОВОД':6,'CD':7};
 const BOSS1=[['ПРОВОД БЕЗДНЫ',12,'🕳','',2],['ЧЕРНЫЙ ДИСК',8,'⬛','disk',2],
   ['ДАЙЛ-АП С ТОГО СВЕТА',6,'📞','dial',2],['КРИК 56K',4,'📢','scream',2],
   ['ДИСКЕТА ПРОКЛЯТЫХ',6,'💾','',3],['ЧЕРНАЯ БОЛВАНКА',8,'💿','',3],['КРИПТО-ЧЕРВЬ ТЬМЫ',4,'🪱','',3]];
@@ -467,16 +520,31 @@ const BOSS2=[['ХРЮК-ФАЕРВОЛ',12,'🖥','fire',2],['ПИНГ 999',10,'
 const BOSS_HP=[100,130],BOSS_NAME=['МОДЕМ-САТАНА','ХРЮКАЮЩИЙ СЕРВЕР'];
 const EVENTS=[['ВЫРУБИЛИ СВЕТ','вся сила −3 в этот ход','light'],['ПРОЛИЛИ КЕФИР','+6 тиков','kefir'],
   ['ВКЛЮЧИЛАСЬ ДИСКОТЕКА','удар +4','disco'],['СОСЕД СТУЧИТ ПО БАТАРЕЕ','оба −4 тика','radiator'],
-  ['ПОМЕХИ В ЭФИРЕ','ничего, но тревожно','static']];
+  ['ПОМЕХИ В ЭФИРЕ','ничего, но тревожно','static'],
+  ['ПОЛНОЛУНИЕ ВНЕ ОЧЕРЕДИ','луна скачет на 🌕','fullmoon'],
+  ['ХОМЯК-БЕЖЕНЕЦ','+1 случайный хомяк в вольер','refugee'],
+  ['КОРОТОКОЕ ЗАМЫКАНИЕ','карты в руке перемешались','shortcircuit']];
 const SAY={bigHit:['ХОРОШО ПОШЛА, БРАТ','ЭТО БЫЛО МОЩНО','УВАЖУХА'],
   hurt:['ЗА ТЕБЯ БОЛЬНО, БРАТ','ДЕРЖИСЬ ТАМ','АЙ-АЙ'],
   hamster:['ХОМЯК ИДЕТ В АТАКУ','ХОМЯК ОДОБРЯЕТ'],
   fumble:['ТЫ ЧЕ ТВОРИШЬ, МУЖИК','НУ ЭТО ПРОВАЛ'],
   boss:['ОН ВЫХОДИТ ИЗ ДИАПАЗОНА'],win:['ПОБЕДА, ЧИСТО']};
-const QT=['«Сила в правде, брат.»','«Нормально. Поехали домой.»','«Сколько тебе надо? — А сколько есть?»'];
+const QT=[
+  '«Сила в правде, брат.» — Брат 2','«Нормально. Поехали домой.» — Брат 2',
+  '«Я узнал, что у меня есть огромная семья…» — Брат',
+  '«Суслик видишь? — Нет. — И я не вижу. А он есть.» — ДМБ',
+  '«Я требую продолжения банкета!» — Иван Васильевич',
+  '«Шеф, всё пропало!» — Бриллиантовая рука',
+  '«Надо, Федя. Надо.» — Операция «Ы»','«Ку!» — Кин-дза-дза!',
+  '«Спортсменка, комсомолка и просто красавица!» — Кавказская пленница',
+  '«Хороший человек — не профессия.» — из эпохи',
+  '«Наши люди в булочную на такси не ездят!» — Бриллиантовая рука',
+  '«Кто не рискует, тот не пьёт шампанское.» — из эпохи',
+];
 const SHOP=[['start','+5 стартовых тиков',20],['ham','хомяк +3 к кейсу',25],
   ['moon','старт на полнолуние',15],['gf5','ЗОЛОТОЙ F5 в колоду',30]];
 const MOON=['🌑','🌓','🌕','🌗'],MM=[1,2,3,2],VOW='аеёиоуыэюяaeiou';
+const ARENA_GLOW=['#0a1830','#1a1030','#3a1020','#0f2018'];
 const BOOT_MSG=['Инициализация припоя...','Прогрев паяльника...','Поиск диктора в эфире...',
   'Кормление хомяка...','Полировка диска...','Смазка верстака...','Готово. Страдание начинается.'];
 const TAPE_POOL=[
@@ -492,27 +560,74 @@ const TAPE_POOL=[
   'гороскоп: не ставь сегодня на чётные кубики…',
 ];
 
+/* ============ ПИКСЕЛЬ-ПОРТРЕТЫ ============ */
+const PEPE_MAP=[
+"................","..GGGG....GGGG..",".GGWWWGGGGWWWGG.",".GGWWKGGGGWWKGG.",
+"..GGGGGGGGGGGG..",".GGGGGGGGGGGGGG.",".GGGGGGGGGGGGGG.",".GGGGGGGGGGGGGG.",
+".GRRRRRRRRRRRRG.",".GRRRRRRRRRRRRG.","..GGGGGGGGGGGG..","...GGGGGGGGGG...",
+"....GGGGGGGG....","................","................","................"];
+const PEPE_PAL={G:'#6ab04c',W:'#ffffff',K:'#111111',R:'#c0392b'};
+const KID_MAP=[
+"................","...DDDDDDDDDD...","..DCCCCCCCCCCD..",".DCCWWCCCCWWCCD.",
+".DCCKWCCCCKWCCD.",".DCCCCCCCCCCCCD.","..DCCCCCCCCCCD..","..DCCCCCCCCCCD..",
+"...CCRRRRRRCC...","...CCCCCCCCCC...","....DDDDDDDD....","................",
+"................","................","................","................"];
+const KID_PAL={C:'#00bcd4',D:'#005662',W:'#e0f7fa',K:'#111111',R:'#e91e63'};
+const SAT_MAP=[
+"..R..........R..","..RR........RR..","...VVVVVVVVVV...","..VVVVVVVVVVVV..",
+".VVVYYVVVVYYVVV.",".VVVYKVVVVKYVVV.",".VVVVVVVVVVVVVV.","..VVVVVVVVVVVV..",
+"..VVRRRRRRRRVV..","..VVVRRRRRRVVV..","...VVVVVVVVVV...","....VVVVVVVV....",
+"................","................","................","................"];
+const SAT_PAL={V:'#8e24aa',R:'#f44336',Y:'#ffeb3b',K:'#111111'};
+const SRV_MAP=[
+"................",".DDDDDDDDDDDDDD.",".DSSSSSSSSSSSSD.",".DSWWSSSSSSWWSD.",
+".DSKWSSSSSSWKSD.",".DSSSSSSSSSSSSD.",".DSSSSSSSSSSSSD.",".DSKSKSKSKSKSSD.",
+".DSSSSSSSSSSSSD.",".DDDDDDDDDDDDDD.","................","................",
+"................","................","................","................"];
+const SRV_PAL={S:'#00e676',D:'#00332a',W:'#e8f5e9',K:'#111111'};
+
 /* ============================================================
    02. СОСТОЯНИЕ
 ============================================================ */
 let P,E;
 let turn=0,sel=-1,busy=false,over=false;
-let sing=false,boost=0,freeze=false,steal=false; /* замороженные ставки */
-let hamster=0,trashUsed=true,binnedFlag=false;
+let sing=false,boost=0,freeze=false,steal=false;
+let trashUsed=true,binnedFlag=false;
 let heat=0,overheatReady=false;
 let moonOff=0,nestTurns=0,lastBinF='',lastBinDigit=0,ev='';
-let bossStage=0,mode2=false;
+let bossStage=0;
 let caseTimer=0,caseTestMode=false;
 let tnActive=false,tnRaf=0;
 let idleT=Date.now(),useless=0;
 let AC=null,SND={on:true},vq=0;
 let META,SET,menuOpen=false;
 let stats=freshStats();
+let shield=0;
+let cage=[];
+let newCards=new Set();
+let overflowBonus=0;
+let lunaCost=CFG.LUNA_DEFAULT;
+let lunaUsedThisTurn=false;
+let firstLunaTurn=true;
 const $=id=>document.getElementById(id);
 function freshStats(){return{out:0,inn:0,played:0,hams:0,cases:0,last:'—'}}
-/* единые точки урона: статистика видит ВСЕ источники */
-function dmgToPlayer(n,src){P.t-=n;stats.inn+=n;stats.last=src+' −'+n}
+function dmgToPlayer(n,src){
+  let rem=n;
+  if(shield>0&&rem>0){const use=Math.min(shield,rem);shield-=use;rem-=use;
+    if(use>0)log('🛡 VPN-щит поглотил '+use+' урона ('+shield+' осталось).','d');}
+  if(rem>0){P.t-=rem;stats.inn+=rem;}
+  stats.last=src+' −'+n;
+}
 function dmgToEnemy(n,src){E.t-=n;stats.out+=n;stats.last=src+' −'+n}
+const activeHam=()=>cage.length?cage[0]:null;
+const bossRage=()=>isBoss()&&E.t<=Emax()*CFG.RAGE_AT;
+function hamHP(pw){
+  if(pw>=CFG.HAM.CAP)return 5;
+  if(pw>=CFG.HAM.RECOIL_AT)return 4;
+  if(pw>=11)return 3;
+  if(pw>=6)return 2;
+  return 1;
+}
 
 /* ============================================================
    03. УТИЛИТЫ
@@ -536,10 +651,35 @@ function pow(c){if(c.f!=='ЧРВ')return c.pw;let m=MM[moonI()];if(nestTurns>0)m
 function loadJSON(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}
 function saveJSON(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 META=loadJSON(CFG.META_KEY,{tics:0,perks:{start:false,ham:false,moon:false,gf5:false}});
-SET=loadJSON(CFG.SET_KEY,{voice:1,sfx:1,annoy:true,fast:false,ann:true,epi:false});
+SET=loadJSON(CFG.SET_KEY,{voice:1,sfx:1,annoy:true,fast:false,ann:true,epi:false,snd:true});
+SND.on=!!SET.snd;
 
 /* ============================================================
-   04. ЗВУК И РЕЧЬ
+   04. ПИКСЕЛЬ-ГРАФИКА
+============================================================ */
+function pixelSVG(map,pal){
+  const H=map.length,W=map[0].length;let r='';
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const ch=map[y][x];if(ch==='.'||!pal[ch])continue;
+    r+='<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+pal[ch]+'"/>';
+  }
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" shape-rendering="crispEdges">'+r+'</svg>';
+}
+function setFaces(){
+  const pf=$('pface');if(pf)pf.querySelector('.pimg').innerHTML=pixelSVG(PEPE_MAP,PEPE_PAL);
+  const m=bossStage===1?SAT_MAP:bossStage===2?SRV_MAP:KID_MAP;
+  const p=bossStage===1?SAT_PAL:bossStage===2?SRV_PAL:KID_PAL;
+  const ef=$('eface');if(ef){ef.classList.remove('die','rage');ef.querySelector('.pimg').innerHTML=pixelSVG(m,p);}
+}
+function faceReact(id,cls,ms){
+  if(SET.epi&&cls!=='die')return;
+  const el=$(id);if(!el)return;
+  el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);
+  setTimeout(()=>el.classList.remove(cls),ms||460);
+}
+
+/* ============================================================
+   05. ЗВУК И РЕЧЬ
 ============================================================ */
 function ac(){AC=AC||new(window.AudioContext||window.webkitAudioContext)();
   if(AC.state==='suspended')AC.resume();return AC}
@@ -561,12 +701,15 @@ const sfx={
   lose(){[400,300,220,140].forEach((f,i)=>tone(f,.2,'sawtooth',.08,i*.18))},
   snort(){tone(140,.15,'sawtooth',.14);tone(90,.22,'sawtooth',.14,.18)},
   leg(){[1047,1319,1568,2093].forEach((f,i)=>tone(f,.1,'triangle',.08,i*.09))},
-  /* золотой перезвон легендарки */
   gold(){[1319,1568,1976,2637,3136].forEach((f,i)=>tone(f,.2,'triangle',.09,i*.09));
     tone(523,.5,'sine',.05,.5);tone(3951,.3,'sine',.03,.55)},
   perfect(){tone(2200,.05,'triangle',.08);tone(2800,.08,'triangle',.08,.05)},
   caseTick(){tone(1600,.02,'square',.03)},
   forge(){tone(220,.1,'sawtooth',.1);tone(440,.08,'square',.08,.1);tone(880,.12,'triangle',.08,.2)},
+  junk(){tone(160,.15,'sawtooth',.09);tone(120,.2,'square',.07,.1)},
+  drawTick(i){tone(420+i*90,.05,'triangle',.04,i*0.06)},
+  shield(){tone(1000,.08,'sine',.07);tone(1600,.1,'sine',.06,.07)},
+  heart(){tone(60,.1,'sine',.15)},
 };
 function modem(){[[1200,.15],[2250,.15],[980,.2],[1650,.12],[2100,.25]]
   .forEach(([f,d],i)=>tone(f,d,'square',.05,i*.17));tone(300,.4,'sawtooth',.06,.9)}
@@ -589,13 +732,14 @@ function hoverTone(c){
     :c.f==='ЧРВ'?300+Math.random()*80:140+Math.random()*700;
   tone(f,.045,'square',.022);
 }
-function mute(){SND.on=!SND.on;
+function syncSndLabel(){$('miSnd').textContent=SND.on?'🔊 ЗВУК: ВКЛ':'🔇 ЗВУК: ВЫКЛ'}
+function mute(){SND.on=!SND.on;SET.snd=SND.on;saveJSON(CFG.SET_KEY,SET);
   if(!SND.on&&window.speechSynthesis){speechSynthesis.cancel();vq=0}
-  $('miSnd').textContent=SND.on?'🔊 ЗВУК: ВКЛ':'🔇 ЗВУК: ВЫКЛ'}
+  syncSndLabel()}
 addEventListener('pointerdown',()=>{if(!AC)tone(440,.01)},{once:true});
 
 /* ============================================================
-   05. ЭФФЕКТЫ И ЛОГ
+   06. ЭФФЕКТЫ И ЛОГ
 ============================================================ */
 function shake(){if(SET.epi)return;const m=$('main');
   m.classList.remove('shk');void m.offsetWidth;m.classList.add('shk')}
@@ -612,9 +756,27 @@ function burst(color){if(SET.epi)return;
 function log(t,c){const l=$('log'),d=document.createElement('div');
   if(c)d.className=c;d.textContent='▸ '+t;l.prepend(d);
   while(l.children.length>40)l.lastChild.remove()}
+function flyCard(cardEl,targetEl,cb){
+  if(!cardEl||!targetEl||SET.epi){cb&&cb();return}
+  const a=cardEl.getBoundingClientRect(),b=targetEl.getBoundingClientRect();
+  const clone=cardEl.cloneNode(true);
+  clone.style.position='fixed';clone.style.left=a.left+'px';clone.style.top=a.top+'px';
+  clone.style.width=a.width+'px';clone.style.height=a.height+'px';
+  clone.style.margin='0';clone.style.zIndex='300';clone.style.pointerEvents='none';
+  clone.style.transition='transform .42s cubic-bezier(.45,-0.2,.5,1.2),opacity .42s';
+  document.body.appendChild(clone);
+  cardEl.style.visibility='hidden';
+  const dx=(b.left+b.width/2)-(a.left+a.width/2);
+  const dy=(b.top+b.height/2)-(a.top+a.height/2);
+  requestAnimationFrame(()=>{
+    clone.style.transform='translate('+dx+'px,'+dy+'px) rotate(340deg) scale(.85)';
+    clone.style.opacity='.5';
+  });
+  setTimeout(()=>{burst('#0ff');clone.remove();cb&&cb()},430);
+}
 
 /* ============================================================
-   06. КОЛОДЫ
+   07. КОЛОДЫ
 ============================================================ */
 const shuf=d=>{d=[...d];for(let i=d.length-1;i>0;i--){
   const j=Math.random()*(i+1)|0;[d[i],d[j]]=[d[j],d[i]]}return d};
@@ -626,7 +788,12 @@ function mkDeck(player){
   ART.forEach(([ic,n,pw])=>d.push(mkC('АРТ',n,pw,ic)));
   WORM_N.forEach(n=>d.push(mkC('ЧРВ',n,3,'🪱')));
   F5_N.forEach(n=>d.push(mkC('F5',n,0,'⌨')));
-  if(player&&META.perks.gf5)d.push(mkC('F5','ЗОЛОТОЙ F5',0,'⌨',{l:'gf5'}));
+  if(player){
+    if(META.perks.gf5)d.push(mkC('F5','ЗОЛОТОЙ F5',0,'⌨',{l:'gf5'}));
+    for(let k=0;k<3;k++)d.push(mkC('VPN','VPN +1',0,'🛡',{sh:1}));
+    for(let k=0;k<2;k++)d.push(mkC('VPN','VPN +2',0,'🛡',{sh:2}));
+    d.push(mkC('VPN','VPN +3',0,'🛡',{sh:3}));
+  }
   return shuf(d);
 }
 function mkBossDeck(st){
@@ -637,6 +804,7 @@ function mkBossDeck(st){
 }
 const mkSide=()=>({t:69+(META.perks.start?5:0),deck:mkDeck(true),hand:[],disc:[]});
 function draw(s,isP){
+  let added=0;
   while(s.hand.length<5){
     if(!s.deck.length){
       if(s.disc.length){s.deck=shuf(s.disc);s.disc=[];continue}
@@ -644,56 +812,69 @@ function draw(s,isP){
       log('Колода переродилась из пепла архива.','d');
       if(!s.deck.length)break;
     }
-    s.hand.push(s.deck.pop());
+    const card=s.deck.pop();s.hand.push(card);
+    if(isP){newCards.add(card);sfx.drawTick(added);added++;}
   }
 }
 
 /* ============================================================
-   07. СЕЙВ СЕАНСА
+   08. СЕЙВ И СБРОС
 ============================================================ */
 function saveGame(){
   if(over)return;
-  try{localStorage.setItem(CFG.SAVE_KEY,JSON.stringify({P,E,turn,bossStage,moonOff,hamster,
+  try{localStorage.setItem(CFG.SAVE_KEY,JSON.stringify({P,E,turn,bossStage,moonOff,
     trashUsed,nestTurns,lastBinF,lastBinDigit,ev,freeze,boost,steal,sing,
-    heat,overheatReady,binnedFlag,mode2,stats}))}catch(e){}
+    heat,overheatReady,binnedFlag,stats,shield,cage,overflowBonus,
+    lunaCost,lunaUsedThisTurn,firstLunaTurn}))}catch(e){}
 }
 function loadSave(){try{const d=JSON.parse(localStorage.getItem(CFG.SAVE_KEY));
   return(d&&d.P&&d.E)?d:null}catch(e){return null}}
 function clearSave(){try{localStorage.removeItem(CFG.SAVE_KEY)}catch(e){}}
+function hardReset(){
+  if(!confirm('СБРОСИТЬ ВСЁ? Сейв, мета-тики, перки и настройки сгорят безвозвратно.'))return;
+  try{localStorage.removeItem(CFG.SAVE_KEY);localStorage.removeItem(CFG.META_KEY);
+    localStorage.removeItem(CFG.SET_KEY)}catch(e){}
+  location.reload();
+}
 function applySave(sv){
   P=sv.P;E=sv.E;turn=sv.turn||0;bossStage=sv.bossStage||0;moonOff=sv.moonOff||0;
-  hamster=sv.hamster||0;trashUsed=!!sv.trashUsed;nestTurns=sv.nestTurns||0;
+  trashUsed=!!sv.trashUsed;nestTurns=sv.nestTurns||0;
   lastBinF=sv.lastBinF||'';lastBinDigit=sv.lastBinDigit||0;ev=sv.ev||'';
   freeze=!!sv.freeze;boost=sv.boost||0;steal=!!sv.steal;sing=!!sv.sing;
   heat=sv.heat||0;overheatReady=!!sv.overheatReady;binnedFlag=!!sv.binnedFlag;
-  mode2=!!sv.mode2;
-  stats=sv.stats||freshStats();
-  stats.last='—'; /* БАГ №2: послесловие прошлой жизни не таскаем */
+  stats=sv.stats||freshStats();stats.last='—';
+  shield=sv.shield||0;cage=(sv.cage||[]).map(h=>({pw:h.pw,hp:h.hp!=null?h.hp:hamHP(h.pw)}));
+  overflowBonus=sv.overflowBonus||0;
+  lunaCost=sv.lunaCost!=null?sv.lunaCost:CFG.LUNA_DEFAULT;
+  lunaUsedThisTurn=!!sv.lunaUsedThisTurn;
+  firstLunaTurn=sv.firstLunaTurn!=null?sv.firstLunaTurn:false;
+  newCards.clear();
   sel=-1;busy=false;over=false;
-  if(!mode2&&bossStage>0&&E.deck.length<2&&E.disc.length<2){
+  if(bossStage>0&&E.deck.length<2&&E.disc.length<2){
     E.deck=mkBossDeck(bossStage);E.disc=[];
     log('Колода босса материализовалась заново из статики.','e');
   }
-  if(mode2)bossStage=0;
   draw(E,false);draw(P,true);
-  syncEnemyLabel();
-  slot('pslot',null);slot('eslot',null);render();
-  log('Сеанс разморожен. Продолжаем страдать с хода '+turn+(mode2?' (дуэль)':'')+'.','g');
+  syncEnemyLabel();slot('pslot',null);slot('eslot',null);render();
+  log('Сеанс разморожен. Продолжаем страдать с хода '+turn+'.','g');
   if(freeze||boost||steal)log('Ставки из прошлой жизни восстановлены: казино помнит всё.','g');
 }
 function syncEnemyLabel(){
-  $('enm').textContent=mode2?'ПРОТИВНИК / ИГРОК 2 · ТИКИ'
-    :(bossStage?('ВРАГ / '+BOSS_NAME[bossStage-1]+' [БОСС '+bossStage+'/2]'):'ВРАГ / СКРИПТ-КИД · ТИКИ');
+  $('enm').textContent=bossStage
+    ?('ВРАГ / '+BOSS_NAME[bossStage-1]+' [БОСС '+bossStage+'/2]')
+    :'ВРАГ / СКРИПТ-КИД · ТИКИ';
   $('et').firstElementChild.className=bossStage===1?'bossy':bossStage===2?'snort':'';
+  setFaces();
 }
 function newRun(){
   P=mkSide();E={t:69,deck:mkDeck(false),hand:[],disc:[]};draw(P,true);draw(E,false);
-  turn=0;bossStage=0;mode2=false;moonOff=META.perks.moon?2:0;hamster=0;
+  turn=0;bossStage=0;moonOff=META.perks.moon?2:0;
   nestTurns=0;lastBinF='';lastBinDigit=0;ev='';sel=-1;busy=false;over=false;
   freeze=false;boost=0;steal=false;sing=false;heat=0;overheatReady=false;binnedFlag=false;
-  stats=freshStats();
+  stats=freshStats();shield=0;cage=[];newCards.clear();
+  overflowBonus=0;lunaCost=CFG.LUNA_DEFAULT;lunaUsedThisTurn=false;firstLunaTurn=true;
   syncEnemyLabel();slot('pslot',null);slot('eslot',null);
-  log('БИЛД 2.13.001: лента приструнена, статистика видит весь урон, легендарки звенят.','d');
+  log('БИЛД 2.20.000: 6 крафтов, подсветка доступного крафта, новые эффекты крафта.','d');
   const pl=[];if(META.perks.start)pl.push('+тики');if(META.perks.ham)pl.push('+хомяк');
   if(META.perks.moon)pl.push('полнолуние');if(META.perks.gf5)pl.push('золотой F5');
   log('Перки из магазина: '+(pl.length?pl.join(', '):'нет'),'g');
@@ -701,13 +882,12 @@ function newRun(){
 }
 
 /* ============================================================
-   08. ОВЕРЛЕИ И МЕНЮ ПУСК
+   09. ОВЕРЛЕИ И МЕНЮ ПУСК
 ============================================================ */
-const OVS=['ov','tn','rost','shop','setov','caseov','p2ov','dbg'];
+const OVS=['ov','tn','shop','setov','caseov','dbg'];
 function ovShow(id,v){$(id).style.display=v?'block':'none';
   $('shade').style.display=OVS.some(o=>$(o).style.display==='block')?'block':'none'}
 const toggleOv=id=>ovShow(id,$(id).style.display!=='block');
-const toggleRoster=()=>toggleOv('rost');
 const toggleSet=()=>toggleOv('setov');
 const toggleDbg=()=>toggleOv('dbg');
 function toggleShop(){buildShop();toggleOv('shop')}
@@ -722,41 +902,19 @@ function menuAct(fn,keep){return e=>{e.stopPropagation();fn();if(!keep)openMenu(
 $('startBtn').addEventListener('click',e=>{e.stopPropagation();openMenu(!menuOpen)});
 $('startmenu').addEventListener('click',e=>e.stopPropagation());
 document.addEventListener('click',()=>{if(menuOpen)openMenu(false)});
-$('miRoster').onclick=menuAct(toggleRoster);
 $('miShop').onclick=menuAct(toggleShop);
 $('miSet').onclick=menuAct(toggleSet);
 $('miSnd').onclick=menuAct(mute,true);
 $('miDie').onclick=menuAct(()=>{
   if(confirm('Страдания завершить? Сеанс сохранён: вернёшься через загрузку. Мета останется.'))
     location.reload()});
-$('miHot').onclick=menuAct(()=>{
-  if(!confirm('Начать дуэль на двоих? Текущий сеанс будет перезаписан.'))return;
-  clearSave();newRun();mode2=true;syncEnemyLabel();
-  log('РЕЖИМ ХОТСИТ: Игрок 2 в свой ход выбирает карту из открытой руки. Боссы отключены.','g');
-  render();turnStart();
-});
 
 /* ============================================================
-   09. РОСТЕР / МАГАЗИН / ВЕРСТАК / НАСТРОЙКИ
+   10. МАГАЗИН / ВЕРСТАК / ВОЛЬЕР / НАСТРОЙКИ
 ============================================================ */
-function buildRoster(){
-  let h='<div class="sect">ШЕЛУПОНЬ — 9 дикторов ГТА, ×4 каждый (36) · две одинаковые в корзину = апгрейд цифры</div>';
-  for(let n=1;n<=9;n++)h+='<span class="chip s">«'+n+'» '+PERSONA[n]+' ×4</span>';
-  h+='<span class="chip s">«10» ДЕСЯТКА СУДЬБЫ (только через апгрейд)</span>';
-  h+='<div class="sect">АРТЕФАКТЫ 90-х (9) · крафт — ВЕРСТАК в правом баре</div>';
-  ART.forEach(([ic,n,pw])=>h+='<span class="chip a">'+n+' · сила '+pw+'</span>');
-  h+='<div class="sect">КРИПТО-ЧЕРВИ (5) · сила 3 × фазу луны</div>';
-  WORM_N.forEach(n=>h+='<span class="chip w">'+n+'</span>');
-  h+='<div class="sect">СЛОМАННЫЕ F5 (4) · в корзине = перезагрузка</div>';
-  F5_N.forEach(n=>h+='<span class="chip f">'+n+'</span>');
-  h+='<div class="sect">ЛЕГЕНДАРКИ (10) · падают с хомяка ≥'+CFG.HAM.LEG_AT+'</div>';
-  LEG.forEach(([ic,n,pw,f,l])=>h+='<span class="chip l">'+ic+' '+n+' · сила '+(pw||'—')+(l?' · '+l:'')+'</span>');
-  h+='<div class="sect">СКОВАНО НА ВЕРСТАКЕ</div>';
-  [...RECIPES,...LEGREC].forEach(r=>h+='<span class="chip l">'+r.ic+' '+r.n+' · сила '+r.pw+' · '+r.desc+'</span>');
-  $('robd').innerHTML=h;
-}
 function buildShop(){
   let h='<div class="sect">МЕТА-ТИКИ: '+META.tics+' (начисляются за победу)</div>';
+  if(META.lastRun)h+='<div class="mini">последний забег: ход '+META.lastRun.turn+' · нанесено '+META.lastRun.out+' · получено '+META.lastRun.inn+'</div>';
   SHOP.forEach(([k,name,cost])=>{
     const own=META.perks[k];
     h+='<div class="bet"><span><b>'+name+'</b></span><button class="b95" data-k="'+k+'" data-c="'+cost+'" '
@@ -769,9 +927,10 @@ function buildShop(){
     META.tics-=c;META.perks[k]=true;saveJSON(CFG.META_KEY,META);
     sfx.leg();buildShop();updMeta();});
 }
-function updMeta(){$('metaLed').textContent='💰 '+META.tics+' · v2.13.001'}
+function updMeta(){$('metaLed').textContent='💰 '+META.tics+' · v2.20.000'}
 function doCraft(r){
-  if(P.hand.length>=CFG.HAND_MAX){log('Рука забита ('+CFG.HAND_MAX+'/'+CFG.HAND_MAX+'): верстак отказывается.','w');return}
+  const after=P.hand.length-2+1;
+  if(after>CFG.HAND_MAX){log('Рука забита ('+CFG.HAND_MAX+'/'+CFG.HAND_MAX+'): верстак отказывается.','w');return}
   const find=nm=>r.exact?P.hand.findIndex(c=>c.n===nm):P.hand.findIndex(c=>c.n.startsWith(nm));
   const findOther=(nm,skip)=>r.exact
     ?P.hand.findIndex((c,idx)=>idx!==skip&&c.n===nm)
@@ -780,58 +939,70 @@ function doCraft(r){
   let ib=(r.a===r.b)?findOther(r.b,ia):find(r.b);
   if(ib<0||ib===ia)ib=findOther(r.b,ia);
   if(ib<0)return;
+  const cardA=P.hand[ia],cardB=P.hand[ib];
+  const newPw=Math.round((cardA.pw+cardB.pw)*CFG.CRAFT_MULT);
   P.hand.splice(Math.max(ia,ib),1);P.hand.splice(Math.min(ia,ib),1);
-  P.hand.push(mkC(r.f,r.n,r.pw,r.ic,r.ex));
-  if(r.exact){sfx.forge();burst('#d4a017');voice('КОВКА',.3,.8);
-    log('⚒ КОВКА ЛЕГЕНДАРОК: '+r.n+' ('+r.pw+'). Верстак дымится золотом.','g');}
-  else{sfx.leg();burst('#ff9900');voice('ВЕРСТАК',.4,.9);
-    log('🔨 Верстак сковал: '+r.n+' ('+r.pw+'). Припой дымится.','g');}
+  P.hand.push(mkC(r.f,r.n,newPw,r.ic,r.ex));
+  sfx.leg();burst('#ff9900');voice('ВЕРСТАК',.4,.9);
+  log('🔨 Верстак сковал '+r.n+' = ('+cardA.pw+'+'+cardB.pw+')×1.5 = '+newPw+'. Припой дымится.','g');
   sel=-1;render();saveGame();
 }
-function upgradeHamster(){
-  const H=CFG.HAM;
-  if(hamster<=0||hamster>=H.CAP||P.t<H.UP_COST||busy||over)return;
-  P.t-=H.UP_COST;hamster=Math.min(H.CAP,hamster+H.UP_STEP);
-  const[co]=tierInfo(hamster);
-  sfx.hamster();burst(co);voice('ХОМЯК ПРОКАЧАН',.8,1.1);
-  log('🔧 Разгон хомяка: теперь '+hamName(hamster)+' ['+hamster+'] ('+tierInfo(hamster)[1]+').','g');
-  if(hamster>=H.CAP)log('🔴 ХОМЯК-ТЕРМИНАТОР собран. Он уже смотрит на тебя иначе.','w');
-  render();saveGame();
+function repairHamster(){
+  const ah=activeHam();
+  if(!ah||busy||over)return;
+  const maxhp=hamHP(ah.pw);
+  if(ah.hp>=maxhp){log('Хомяк и так в полном порядке.','d');return}
+  if(P.t<CFG.HAM.REPAIR_COST){log('На починку нужно '+CFG.HAM.REPAIR_COST+' тиков.','w');return}
+  P.t-=CFG.HAM.REPAIR_COST;
+  ah.hp=maxhp;
+  sfx.hamster();burst('#0f0');voice('ХОМЯК ПОЧИНЕН',.8,1.1);
+  log('🔧 Хомяк '+hamName(ah.pw)+' починен до '+ah.hp+'/'+maxhp+' ХП.','g');
+  render();
+  saveGame();
+  if(checkLoss())return;
 }
 function buildBench(){
   const bd=$('benchbd');if(!bd)return;
-  const H=CFG.HAM;
+  const ah=activeHam();
   let h='<div class="mini">рука '+P.hand.length+'/'+CFG.HAND_MAX+' · тики '+P.t+'</div>';
-  h+='<div class="ham" id="ham" style="color:'+(hamster?tierInfo(hamster)[0]:'#ff0')+'">'
-    +(hamster?('ХОМЯК ГОТОВ: '+hamName(hamster)+' ['+hamster+']'):'ХОМЯК НЕ ПРИЗВАН')+'</div>';
   h+='<div class="mini" style="text-align:center">'+((!trashUsed&&turn%3===0)
     ?'корзина: ЗАРЯЖЕНА — жми 🗑':'корзина: '+(3-turn%3)+' ход(а) до заряда')+'</div>';
   const row=(r,i,attr,can,label)=>{
-    h+='<div class="bet"><span>'+label+'</span><button class="b95" '+attr+'="'+i+'" '
-      +(can?'':'disabled')+'>'+r.btn+'</button></div>'};
-  h+='<div class="sect">АРТЕФАКТЫ</div>';
+    h+='<div class="bet"><span>'+label+'</span><button class="b95'+(can?' craft-ready':'')+'" '
+      +attr+'="'+i+'" '+(can?'':'disabled')+'>'+r.btn+'</button></div>'};
+  h+='<div class="sect">АРТЕФАКТЫ · урон=(A+B)×1.5</div>';
   RECIPES.forEach((r,i)=>{
     const cnt=nm=>P.hand.filter(c=>c.n.startsWith(nm)).length;
     const ca=cnt(r.a),cb=cnt(r.b);
     const can=!busy&&!over&&ca>0&&cb>0&&!(r.a===r.b&&ca<2)&&P.hand.length<CFG.HAND_MAX;
+    const dmg=Math.round((BASEDMG[r.a]+BASEDMG[r.b])*CFG.CRAFT_MULT);
     row({...r,btn:'СКОВАТЬ'},i,'data-r',can,
-      r.a.slice(0,6)+'('+ca+')+'+r.b.slice(0,6)+'('+cb+') → <b>'+r.n+'</b>');});
-  h+='<div class="sect">КОВКА ЛЕГЕНДАРОК</div>';
-  LEGREC.forEach((r,i)=>{
-    const cnt=nm=>P.hand.filter(c=>c.n===nm).length;
-    const can=!busy&&!over&&cnt(r.a)>0&&cnt(r.b)>0&&P.hand.length<CFG.HAND_MAX;
-    row({...r,btn:'⚒'},i,'data-l',can,
-      r.a+' ('+cnt(r.a)+') + '+r.b+' ('+cnt(r.b)+') → <b>'+r.n+'</b> <span class="mini">'+r.desc+'</span>');});
-  h+='<div class="sect">РАЗГОН ХОМЯКА</div>';
-  const canUp=hamster>0&&hamster<H.CAP&&P.t>=H.UP_COST&&!busy&&!over;
-  h+='<div class="bet"><span><b>+'+H.UP_STEP+' к хомяку</b> <span class="mini">'
-    +(hamster?(hamster+' '+hamName(hamster)+' → потолок '+H.CAP):'хомяка нет')
-    +' · −'+H.UP_COST+' тиков</span></span>'
-    +'<button class="b95" id="bup" '+(canUp?'':'disabled')+'>РАЗГОН</button></div>';
+      SHORT[r.a]+'('+ca+') + '+SHORT[r.b]+'('+cb+') → <b>'+r.n+'</b> ('+dmg+')');
+  });
+  h+='<div class="sect">ПОЧИНКА ХОМЯКА</div>';
+  const maxhp=ah?hamHP(ah.pw):0;
+  const canRep=ah&&ah.hp<maxhp&&P.t>=CFG.HAM.REPAIR_COST&&!busy&&!over;
+  h+='<div class="bet"><span><b>починить до '+maxhp+' ХП</b> <span class="mini">'
+    +(ah?(ah.hp+'/'+maxhp+' ХП сейчас'):'хомяка нет')
+    +' · −'+CFG.HAM.REPAIR_COST+' тиков</span></span>'
+    +'<button class="b95'+(canRep?' craft-ready':'')+'" id="bup" '+(canRep?'':'disabled')+'>ПОЧИНИТЬ</button></div>';
   bd.innerHTML=h;
   bd.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>doCraft(RECIPES[+b.dataset.r]));
-  bd.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>doCraft(LEGREC[+b.dataset.l]));
-  const up=$('bup');if(up)up.onclick=upgradeHamster;
+  const up=$('bup');if(up)up.onclick=repairHamster;
+}
+function buildCage(){
+  const bd=$('cagebd');if(!bd)return;
+  let h='';
+  if(!cage.length)h='<div class="mini">пусто. крути кейс в корзину.</div>';
+  else cage.forEach((hm,i)=>{
+    const[co]=tierInfo(hm.pw);
+    const act=i===0?'<span class="cageact"> ⚔ в бою</span>':'';
+    h+='<div class="bet"><span>🐹 <span style="color:'+co+'">'+hamName(hm.pw)+'</span> · сила '+hm.pw
+      +' · <span class="cagehp">❤'+hm.hp+'/'+hamHP(hm.pw)+'</span>'+act+'</span></div>';
+  });
+  h+='<div class="mini">'+(cage.length?'первый бьёт за тебя. когда тебе больно — ему тоже (−1 ХП).':'')+'</div>';
+  h+='<div class="mini">вместимость '+cage.length+'/'+CFG.HAM.CAGE_MAX+'</div>';
+  bd.innerHTML=h;
 }
 function applySet(){
   $('stage').classList.toggle('noannoy',!SET.annoy);
@@ -851,30 +1022,70 @@ function bindSet(){
   $('cEpi').onchange=e=>{SET.epi=e.target.checked;applySet();save();
     log(SET.epi?'Спокойный режим включён: мигание и мельтешение отключены. Береги себя.'
       :'Мигание возвращено. Припой снова сверкает.','d')};
+  $('btnReset').onclick=hardReset;
 }
 
 /* ============================================================
-   10. OPS.CENTER И РЕНДЕР
+   11. ПОДСКАЗКА КАРТЫ
+============================================================ */
+function cardTipText(c){
+  const FN={ШЕЛ:'Шелупонь',АРТ:'Артефакт',ЧРВ:'Крипто-червь',F5:'F5',МУС:'Мусор',БОСС:'Карта врага',VPN:'VPN-щит'};
+  const pw=c.f==='ЧРВ'?pow(c):c.pw;
+  let b='';
+  if(c.f==='ШЕЛ')b='Диктор ГТА. Сила = цифре.';
+  else if(c.f==='АРТ')b='Артефакт 90-х.';
+  else if(c.f==='ЧРВ')b='Сила × фазу луны.';
+  else if(c.f==='F5')b='Не играет. В корзине = перезагрузка раунда.';
+  else if(c.f==='МУС')b='Хлам от босса. Сила 0, забивает руку.';
+  else if(c.f==='VPN')b='Подключи +'+(c.sh||0)+' щита. Можно вместе с атакой — ход не кончается.';
+  if(c.l==='turbo')b+=' Турбо: +5 если есть хомяк.';
+  if(c.l==='ext')b+=' Удлинитель: +3 если есть VPN-щит.';
+  if(c.l==='steal2')b+=' Вампир: +2 тика тебе, −2 врагу.';
+  if(c.l==='heal2')b+=' Лечение: +2 тика.';
+  if(c.l==='heal3')b+=' Лечение: +3 тика.';
+  if(c.l==='heal4')b+=' Лечение: +4 тика.';
+  if(c.l==='pirate')b+=' Глушит спецэффект врага.';
+  if(c.l==='gf5')b+=' Золотой: +10 тиков при сбросе.';
+  if(c.l==='playable')b+=' САМУРАЙ: можно бить!';
+  return '<b>'+c.n+'</b><br>'+(FN[c.f]||'')+' · сила '+pw+(b?'<br>'+b:'');
+}
+function showCardTip(c,el){
+  const tip=$('cardtip');if(!tip)return;
+  $('ctBody').innerHTML=cardTipText(c);
+  tip.style.display='block';
+  const st=$('stage').getBoundingClientRect(),sc=st.width/1920||1;
+  const r=el.getBoundingClientRect();
+  const tw=tip.offsetWidth,th=tip.offsetHeight;
+  let left=(r.left-st.left)/sc+(r.width/sc)/2-tw/2;
+  left=Math.max(6,Math.min(1920-tw-6,left));
+  let top=(r.top-st.top)/sc-th-10;
+  if(top<6)top=(r.bottom-st.top)/sc+10;
+  tip.style.left=left+'px';tip.style.top=top+'px';
+}
+function hideCardTip(){const t=$('cardtip');if(t)t.style.display='none'}
+
+/* ============================================================
+   12. OPS.CENTER И РЕНДЕР
 ============================================================ */
 function futureMoon(){
   const out=[];
-  for(let k=1;k<=4;k++){
-    const i=((Math.floor((turn+k-1)/2)+moonOff)%4+4)%4;
-    out.push(MOON[i]);
-  }
+  for(let k=1;k<=4;k++){const i=((Math.floor((turn+k-1)/2)+moonOff)%4+4)%4;out.push(MOON[i]);}
   return out;
 }
 function renderOps(){
   const top=$('opsTop');if(!top)return;
   const c=[];
+  c.push('<span class="ochip">ход '+turn+'</span>');
   c.push('<span class="ochip evc">событие: '+(evName()||'—')+'</span>');
   c.push('<span class="ochip">луна '+MOON[moonI()]+'×'+(MM[moonI()]*(nestTurns>0?2:1))
     +' → дальше '+futureMoon().join(' ')+'</span>');
   if(overheatReady)c.push('<span class="ochip hot">🔥 ПЕРЕГРЕВ ×1.5!</span>');
   else if(heat>0)c.push('<span class="ochip hot">🔥 нагрев '+heat+'/3</span>');
   if(nestTurns>0)c.push('<span class="ochip worm">🪱 ГНЕЗДО ×2 ('+nestTurns+')</span>');
-  if(mode2)c.push('<span class="ochip">👥 дуэль</span>');
   if(isBoss())c.push('<span class="ochip boss">💀 БОСС '+bossStage+'/2</span>');
+  if(bossRage())c.push('<span class="ochip rage">☠ ЯРОСТЬ</span>');
+  if(shield>0)c.push('<span class="ochip ob">🛡 щит '+shield+'</span>');
+  if(overflowBonus>0)c.push('<span class="ochip ob">⚡ бонус +'+overflowBonus+'</span>');
   top.innerHTML=c.join('');
   $('opsStats').textContent='⚔ '+stats.out+'/'+stats.inn+' · 🃏 '+stats.played
     +' · 🐹 '+stats.hams+' · 🎰 '+stats.cases+' · посл: '+stats.last;
@@ -883,7 +1094,7 @@ function renderOps(){
 }
 function tapeRefresh(){
   const s=$('tapeTxt');if(!s)return;
-  s.textContent=rnd(TAPE_POOL); /* одна строка — короче, легче, ничего не распирает */
+  s.textContent=rnd(TAPE_POOL);
   s.style.animation='none';void s.offsetWidth;s.style.animation='';
 }
 setInterval(tapeRefresh,14000);
@@ -892,54 +1103,95 @@ function render(){
   $('et').firstElementChild.style.width=Math.max(0,E.t/Emax()*100)+'%';
   $('ptv').textContent=Math.max(0,P.t)+' / 69';
   $('etv').textContent=Math.max(0,E.t)+' / '+Emax();
-  $('turn').textContent=turn;
-  $('bst').textContent=isBoss()?(bossStage+'/2 '+BOSS_NAME[bossStage-1]):(mode2?'ДУЭЛЬ':'—');
-  const m=MOON[moonI()];$('moon').textContent=m;$('moonbig').textContent=m;
-  $('mx').textContent=$('mx2').textContent=MM[moonI()]*(nestTurns>0?2:1);
-  $('ev').textContent=(overheatReady?'🔥 ПЕРЕГРЕВ готов!':(heat>0?'🔥 нагрев '+heat+'/3':'—'))
-    +(nestTurns>0?' · 🪱 ГНЕЗДО ×2':'');
+  $('moonbig').textContent=MOON[moonI()];
+  $('mx2').textContent=MM[moonI()]*(nestTurns>0?2:1);
+  $('arena').style.setProperty('--arenaGlow',nestTurns>0?'#3a2050':ARENA_GLOW[moonI()]);
+  $('stage').classList.toggle('targeting',sel>=0&&!busy&&!over);
+  const danger=P.t<=CFG.DANGER_AT&&P.t>0&&!over;
+  $('stage').classList.toggle('danger',danger);
+  const sf=$('shieldfill');if(sf)sf.style.width=(shield/CFG.SHIELD_MAX*100)+'%';
+  const stx=$('shieldtxt');if(stx)stx.textContent='🛡'+shield;
+  const rb=$('ragebar');const rf=$('ragefill');
+  if(rb&&rf){
+    if(bossRage()){rb.style.display='block';rf.style.width='100%';$('eface').classList.add('rage');}
+    else{rb.style.display='none';$('eface').classList.remove('rage');}
+  }
+  $('lcost').textContent=lunaCost;
+  $('btnMoonL').textContent='◀ −'+lunaCost;
+  $('btnMoonR').textContent='−'+lunaCost+' ▶';
+  $('btnMoonL').disabled=P.t<lunaCost||busy||over;
+  $('btnMoonR').disabled=P.t<lunaCost||busy||over;
   const selC=sel>=0?P.hand[sel]:null;
   const f5Lock=!!(selC&&selC.f==='F5'&&selC.l!=='playable');
   const h=$('handrow');h.innerHTML='';
+  const skip=document.createElement('button');
+  skip.className='b95 skipbtn';skip.textContent='⏭';skip.title='Пропуск хода — 0 урона, враг бьёт в ответ';
+  skip.disabled=busy||over;skip.onclick=skipTurn;
+  h.appendChild(skip);
   P.hand.forEach((c,i)=>{
     const e=document.createElement('div');
     e.className='cd f-'+c.f+(c.l?' leg':'')+(i===sel?' sel':'')+((i===sel&&f5Lock)?' ff5':'');
+    if(newCards.has(c)){e.classList.add('enter');newCards.delete(c);}
     e.innerHTML='<div class="ic">'+c.ic+'</div><div class="cn">'+(c.p||c.n)+'</div><div class="cp">'
       +(c.f==='ЧРВ'?pow(c):c.pw)+'</div>';
     e.onclick=()=>{if(busy||over)return;sel=(sel===i?-1:i);render()};
-    e.onmouseenter=()=>hoverTone(c);
+    e.onmouseenter=()=>{hoverTone(c);showCardTip(c,e)};
+    e.onmouseleave=hideCardTip;
     h.appendChild(e);
   });
   $('btnBin').disabled=trashUsed||busy;
   $('btnHit').disabled=f5Lock||busy||over;
   renderOps();
   buildBench();
+  buildCage();
 }
 function slot(id,c,x){$(id).innerHTML=c
   ?('<div class="big">'+c.ic+'</div><div class="pn">'+c.n+'</div><div class="pw">'+x+'</div>')
   :'<span class="mini">—</span>'}
 function sortHand(){
   if(busy||over)return;
-  const ord={'ШЕЛ':0,'АРТ':1,'ЧРВ':2,'БОСС':3,'F5':4};
+  const ord={'ШЕЛ':0,'АРТ':1,'ЧРВ':2,'БОСС':3,'МУС':4,'VPN':5,'F5':6};
   P.hand.sort((a,b)=>ord[a.f]-ord[b.f]||b.pw-a.pw);
   sel=-1;render();log('Рука отсортирована: фракции, внутри — по убыванию силы.','d');
 }
 
 /* ============================================================
-   11. ХОД И БОЙ
+   13. ХОД И БОЙ
 ============================================================ */
+function injectJunk(){
+  const pos=Math.random()*(P.deck.length+1)|0;
+  const nm=rnd(JUNK_N);
+  P.deck.splice(pos,0,mkC('МУС',nm,0,'🗑'));
+  sfx.junk();voice('МУСОР В КОЛОДЕ',.2,.8);
+  log('🗑 Босс подкинул хлам в колоду: '+nm+'. Выбрось в корзину или сотри F5.','w');
+}
 function turnStart(){
   if(over)return;
-  turn++;if(nestTurns>0)nestTurns--;
+  turn++;binnedFlag=false;if(nestTurns>0)nestTurns--;
+  if(!firstLunaTurn){
+    if(lunaUsedThisTurn)lunaCost=Math.min(CFG.LUNA_MAX,lunaCost+1);
+    else lunaCost=Math.max(CFG.LUNA_MIN,lunaCost-1);
+  }
+  firstLunaTurn=false;
+  lunaUsedThisTurn=false;
   ev='';
   if(turn%5===0){
     const e=rnd(EVENTS);
     log('СОБЫТИЕ: '+e[0]+' — '+e[1],'g');voice('СОБЫТИЕ. '+e[0],.3,.9);
     if(e[2]==='kefir')P.t+=6;
     if(e[2]==='radiator'){dmgToPlayer(4,'БАТАРЕЯ');dmgToEnemy(4,'БАТАРЕЯ');shake()}
+    if(e[2]==='fullmoon'){moonOff=((2-Math.floor((turn-1)/2))%4+4)%4;
+      log('🌕 Луна скакнула в полнолуние! Черви ликуют.','g')}
+    if(e[2]==='refugee'){const hh=1+(Math.random()*CFG.HAM.CAP|0);
+      if(cage.length<CFG.HAM.CAGE_MAX){cage.push({pw:hh,hp:hamHP(hh)});
+        log('🐹 Хомяк-беженец в вольере: '+hamName(hh)+' ['+hh+'] ❤'+hamHP(hh)+'.','g');}
+      else log('🐹 Хомяк-беженец пришёл, но вольер полон. Ушёл.','w');}
+    if(e[2]==='shortcircuit'){P.hand=shuf(P.hand);
+      log('⚡ КЗ! Карты в руке перемешались.','w')}
     ev=e[2];
   }
-  if(turn%CFG.TECHNO_EVERY===0){voice('РИТМ ДИСК',.2,1);techno(afterDice)}else afterDice();
+  if(isBoss()&&turn%4===0)injectJunk();
+  if(turn%CFG.TECHNO_EVERY===0){voice('РИТМ ДИСК',.2,1);techno(afterDice,false)}else afterDice();
 }
 function afterDice(){
   const d=1+Math.random()*20|0,PR=[2,3,5,7,11,13,17,19];let cls;
@@ -950,6 +1202,7 @@ function afterDice(){
       log('d20='+d+': простое! Обмен картой с врагом.','e');
     }else log('d20='+d+': простое, менять нечего. Неловко.','e');
   }else if(d===1||d===20){cls='ПРОВАЛ';P.t-=5;sfx.hurt();announcer('fumble');
+    faceReact('pface','hurt');faceReact('eface','smug');
     log('d20='+d+': кубик отрицает реальность. −5 тиков.','w');
   }else{cls='ГИМН';sing=true;log('d20='+d+': составное! Бонус = гласным в имени карты.','d')}
   voice(cls,.3,.95);sfx.dice();
@@ -959,13 +1212,15 @@ function afterDice(){
 }
 function moonShift(dir){
   if(over||busy)return;
-  if(P.t<8)return log('На луну нужно 8 тиков. Луна в кредит не верит.','w');
-  P.t-=8;moonOff+=dir;sfx.bet();
-  log('Торги луной: фаза сдвинута → '+MOON[moonI()]+'. Черви в шоке.','d');
+  if(P.t<lunaCost)return log('На луну нужно '+lunaCost+' тиков. Луна в кредит не верит.','w');
+  P.t-=lunaCost;moonOff+=dir;sfx.bet();
+  lunaUsedThisTurn=true;
+  log('Торги луной (−'+lunaCost+'): фаза сдвинута → '+MOON[moonI()]+'. Черви в шоке.','d');
+  if(checkLoss())return;
   render();
 }
 function enemyPick(){
-  const playable=c=>!(c.f==='F5'&&c.l!=='playable');
+  const playable=c=>!(c.f==='F5'&&c.l!=='playable')&&c.f!=='МУС';
   let opts=E.hand.filter(playable);
   if(!opts.length){
     if(E.hand.length){log('Враг сгребает сломанные F5 и хоронит их в архив.','e');
@@ -973,21 +1228,30 @@ function enemyPick(){
     if(!opts.length)return null;
   }
   const worms=opts.filter(x=>x.f==='ЧРВ'),strong=opts.reduce((a,b)=>pow(a)>=pow(b)?a:b);
+  const rage=bossRage();
   if(MM[moonI()]===3&&worms.length&&Math.random()<.85){log('ВРАГ ЖАДНИЧАЕТ НА ПОЛНОЛУНИИ!','e');return rnd(worms)}
-  if(!isBoss()&&!mode2&&E.t<=18){log('Враг трясется над тиками и играет слабой картой.','w');
-    return opts.reduce((a,b)=>pow(a)<=pow(b)?a:b)}
-  if(isBoss())return strong;
+  if(bossStage===1)return strong;
+  if(bossStage===2){
+    if(E.t<Emax()*0.5&&!rage){const heal=opts.find(x=>x.sp==='upt'||x.sp==='dial');if(heal)return heal}
+    return strong;
+  }
+  if(E.t<=18)return opts.reduce((a,b)=>pow(a)<=pow(b)?a:b);
   return Math.random()<.5?strong:rnd(opts);
 }
 function applySpecial(ec){
   switch(ec.sp){
     case 'disk':log('ЧЕРНЫЙ ДИСК гасит все бонусы!','w');return'disk';
-    case 'fire':if(hamster>0){hamster=0;log('ХРЮК-ФАЕРВОЛ сжигает хомяка дотла!','w');sfx.snort()}return'';
+    case 'fire':if(cage.length){const dead=cage.shift();
+      log('ХРЮК-ФАЕРВОЛ сжёг хомяка '+hamName(dead.pw)+' ['+dead.pw+']!','w');sfx.snort();
+      faceReact('pface','hurt');}
+      return'';
     case 'dial':E.t=Math.min(Emax(),E.t+6);log('Дайл-ап лечит врага на 6.','w');return'';
     case 'upt':E.t=Math.min(Emax(),E.t+8);log('БАГ АПТЕЙМ: сервер лечится на 8.','w');return'';
     case 'scream':dmgToPlayer(4,'КРИК 56K');E.t=Math.min(Emax(),E.t+4);sfx.hurt();
+      faceReact('pface','hurt');faceReact('eface','glitch');
       log('КРИК 56K крадёт 4 тика!','w');return'';
     case 'hat':dmgToPlayer(5,'СИНЯЯ ШАПКА');sfx.hurt();
+      faceReact('pface','hurt');faceReact('eface','smug');
       log('СИНЯЯ ШАПКА унесла 5 тиков.','w');return'';
   }
   return'';
@@ -995,8 +1259,21 @@ function applySpecial(ec){
 function legendPlay(c){
   if(!c.l)return;
   if(c.l==='steal2'){P.t+=2;E.t-=2;log('ВАМПИРИЗМ КАРТЫ: вытянуты 2 тика.','g')}
+  if(c.l==='heal2'){P.t+=2;log('ГИБРИД-НАКОПИТЕЛЬ подлатал: +2.','g')}
   if(c.l==='heal3'){P.t+=3;log('КАССЕТА ИЗ 90-Х лечит ностальгией: +3.','g')}
   if(c.l==='heal4'){P.t+=4;log('ПОЧИНКА КАРТЫ: +4 тика.','g')}
+}
+function connectVPN(c){
+  const idx=P.hand.indexOf(c);
+  if(idx<0)return;
+  P.hand.splice(idx,1);
+  const before=shield;
+  shield=Math.min(CFG.SHIELD_MAX,shield+(c.sh||0));
+  const gain=shield-before;
+  sfx.shield();burst('#0ff');
+  log('🛡 VPN подключён: +'+gain+' щита (всего '+shield+'/'+CFG.SHIELD_MAX+'). Ход продолжается.','d');
+  voice('VPN ПОДКЛЮЧЁН',.5,1);
+  sel=-1;render();saveGame();
 }
 function strike(){
   if(over||busy)return;
@@ -1004,81 +1281,89 @@ function strike(){
   const c=P.hand[sel];
   if(c.f==='F5'&&c.l!=='playable')
     return log('F5 не играет! Ему дорога только в КОРЗИНУ. (кроме САМУРАЯ)','w');
+  if(c.f==='VPN'){return connectVPN(c)}
+  const cardEl=$('handrow').children[sel+1];
   busy=true;P.hand.splice(sel,1);
+  stats.last='—';
   if(c.f==='ШЕЛ'){const m=c.n.match(/\d+/);voice(NUMS[c.d||(m?+m[0]:0)]||c.n,.1,.75)}
   else voice(c.n,.5,.95);
   sfx.hit();
-  if(freeze){log('Враг заморожен ставкой @. Он смотрит в стену.','e');return finishStrike(c,null)}
-  if(mode2)return openP2(c);
-  const ec=enemyPick();
-  if(ec){E.hand.splice(E.hand.indexOf(ec),1);E.disc.push(ec)}
-  finishStrike(c,ec);
-}
-function openP2(c){
-  const w=$('p2hand');w.innerHTML='';
-  const playable=x=>!(x.f==='F5'&&x.l!=='playable');
-  if(!E.hand.some(playable)){
-    E.disc.push(...E.hand);E.hand=[];draw(E,false);
-    if(!E.hand.some(playable)){log('У Игрока 2 одни сломанные F5. Он смотрит в окно.','e');
-      return finishStrike(c,null)}
-  }
-  E.hand.forEach((cc,i)=>{
-    const lock=!playable(cc);
-    const e=document.createElement('div');
-    e.className='cd f-'+cc.f+(cc.l?' leg':'');
-    if(lock){e.style.opacity=.45;e.style.cursor='not-allowed'}
-    e.innerHTML='<div class="ic">'+cc.ic+'</div><div class="cn">'+(cc.p||cc.n)+'</div><div class="cp">'
-      +(cc.f==='ЧРВ'?pow(cc):cc.pw)+'</div>';
-    e.onmouseenter=()=>hoverTone(cc);
-    e.onclick=()=>{if(lock)return;E.hand.splice(i,1);E.disc.push(cc);ovShow('p2ov',false);finishStrike(c,cc)};
-    w.appendChild(e);
+  if(c.f==='МУС')log('🗑 Ты швыряешь мусор. Сила 0. Враг даже не напрягся.','w');
+  flyCard(cardEl,$('eslot'),()=>{
+    if(freeze){log('Враг заморожен ставкой @. Он смотрит в стену.','e');return finishStrike(c,null)}
+    const ec=enemyPick();
+    if(ec){E.hand.splice(E.hand.indexOf(ec),1);E.disc.push(ec)}
+    finishStrike(c,ec);
   });
-  ovShow('p2ov',true);
+}
+function skipTurn(){
+  if(over||busy)return;
+  busy=true;sel=-1;stats.last='пропуск';
+  log('⏭ Пропуск хода. Урон 0.','d');
+  let ec=null;
+  if(freeze){log('Враг заморожен ставкой @. Он смотрит в стену.','e');}
+  else{ec=enemyPick();if(ec){E.hand.splice(E.hand.indexOf(ec),1);E.disc.push(ec)}}
+  finishStrike(null,ec);
 }
 function finishStrike(c,ec){
   const betUsed=freeze||boost>0||steal;
   let mult=1,cool=false;
-  if(overheatReady){mult=1.5;cool=true;overheatReady=false;log('🔥 ПЕРЕГРЕВ: удар ×1.5!','g')}
+  if(overheatReady){mult=1.5;cool=true;overheatReady=false;faceReact('pface','glitch');
+    log('🔥 ПЕРЕГРЕВ: удар ×1.5!','g')}
   let disk=false;
   if(ec){
-    if(c.l==='pirate')log('ПИРАТСКИЙ КОМПАКТ глушит спец-эффект врага!','g');
+    if(c&&c.l==='pirate')log('ПИРАТСКИЙ КОМПАКТ глушит спец-эффект врага!','g');
     else if(applySpecial(ec)==='disk')disk=true;
   }
-  const singB=sing?vowels(c.n):0;
-  const hamC=hamster===1?0:(hamster||0);
-  let p=pow(c)+singB+boost+hamC;
-  if(c.l==='turbo'&&hamster>0){p+=5;log('ТУРБО разгоняет хомяка: +5.','g')}
-  if(disk)p=pow(c)+hamC;
+  const singB=(c&&sing)?vowels(c.n):0;
+  const ah=activeHam();
+  const hamC=(c&&ah)?(ah.pw===1?0:ah.pw):0;
+  let p=(c?pow(c):0)+singB+boost+hamC;
+  if(c&&c.l==='turbo'&&ah){p+=5;log('ТУРБО разгоняет хомяка: +5.','g')}
+  if(c&&c.l==='ext'&&shield>0){p+=3;log('УДЛИНИТЕЛЬ запитан от щита: +3.','g')}
+  if(disk)p=(c?pow(c):0)+hamC;
   if(mult>1)p=Math.round(p*mult);
+  if(overflowBonus>0){p+=overflowBonus;
+    log('⚡ Бонус переполнения тиков: +'+overflowBonus+' к удару.','g');overflowBonus=0;}
   let e=ec?Math.max(0,pow(ec)-(steal?4:0)):0;
-  if(ec&&e<pow(ec))log('Кража гласной: сила врага −4.','d');
-  legendPlay(c);
+  if(ec&&bossRage()){const bonus=Math.ceil(e*0.3);e+=bonus;
+    log('☠ ЯРОСТЬ босса: его атака +'+bonus+'!','w');}
+  else if(ec&&e<pow(ec))log('Кража гласной: сила врага −4.','d');
+  if(c)legendPlay(c);
   if(ev==='light'){p=Math.max(0,p-3);e=Math.max(0,e-3);log('Свет вырубили: обе силы −3.','w')}
   if(ev==='disco'){p+=4;log('Дискотека качает: удар +4.','g')}
-  /* пассивы боссов — тоже урон, статистика его видит */
   if(bossStage===1&&turn%3===0){dmgToPlayer(4,'КРИК САТАНЫ');sfx.hurt();voice('КРИК',.1,.6);
+    faceReact('pface','hurt');faceReact('eface','glitch');
     log('МОДЕМ-САТАНА: КРИК 56K, −4 тика.','e')}
   if(bossStage===2&&turn%3===0){dmgToPlayer(2,'ХРЮК СЕРВЕРА');sfx.snort();
+    faceReact('pface','hurt');faceReact('eface','glitch');
     log('СЕРВЕР ХРЮКАЕТ: −2 тика.','e')}
   slot('pslot',c,p);slot('eslot',ec,ec?e:'ПРОПУСК');
   stats.played++;
+  const cname=c?c.n:'ПРОПУСК';
   const diff=p-e;
   if(diff>0){dmgToEnemy(diff,'удар');$('dmg').textContent='ВРАГ −'+diff;
     pop('−'+diff,'R','#0f0');burst('#f0f');shake();
-    log(c.n+' ('+p+') vs '+(ec?ec.n+' ('+e+')':'СТЕНА')+' → ВРАГ −'+diff,'e');
+    faceReact('eface','hurt');faceReact('pface','smug');
+    log(cname+' ('+p+') vs '+(ec?ec.n+' ('+e+')':'СТЕНА')+' → ВРАГ −'+diff,'e');
     if(diff>=8)announcer('bigHit');
   }else if(diff<0){dmgToPlayer(-diff,'удар');$('dmg').textContent='ТЫ −'+(-diff);
     pop('−'+(-diff),'L','#f33');shake();
-    log(c.n+' ('+p+') vs '+(ec?ec.n+' ('+e+')':'СТЕНА')+' → ТЫ −'+(-diff),'w');sfx.hurt();
+    faceReact('pface','hurt');faceReact('eface','smug');
+    log(cname+' ('+p+') vs '+(ec?ec.n+' ('+e+')':'СТЕНА')+' → ТЫ −'+(-diff),'w');sfx.hurt();
+    if(ah&&c){
+      ah.hp-=1;
+      if(ah.hp<=0){cage.shift();
+        log('🐹 '+hamName(ah.pw)+' ['+ah.pw+'] пал в бою! Вольер поредел.','w');
+        faceReact('pface','hurt');}
+      else log('🐹 '+hamName(ah.pw)+' ранен ('+ah.hp+' ХП осталось).','w');
+    }
     if(diff<=-8)announcer('hurt');
   }else{$('dmg').textContent='НИЧЬЯ';stats.last='ничья';log('Ничья. Припой остыл.','d')}
-  if(hamster===1){P.t+=3;log('Хомяк-пацифист вылечил 3 тика.','d')}
-  if(hamster>=CFG.HAM.RECOIL_AT){dmgToPlayer(3,'хомяк-каратель');
-    log('Хомяк высшей лиги вошёл во вкус: −3 тика тебе.','w')}
   if(sing)log('Гимн спет системой. Гласных: '+singB+'.','d');
   if(cool){dmgToPlayer(5,'остывание');log('ПЕРЕГРЕВ остывает: −5 тиков.','w')}
-  P.disc.push(c);
-  sing=false;boost=0;freeze=false;steal=false;hamster=0;sel=-1;
+  if(c)P.disc.push(c);
+  sing=false;boost=0;freeze=false;steal=false;sel=-1;
   if(betUsed||binnedFlag)heat=0;
   else if(++heat>=3){overheatReady=true;heat=0;log('🔥 ПЕРЕГРЕВ НАКОПЛЕН: следующий удар ×1.5!','g')}
   binnedFlag=false;
@@ -1087,7 +1372,6 @@ function finishStrike(c,ec){
   saveGame();
   setTimeout(turnStart,450);
 }
-/* ЗАМОРОЖЕНО до переработки: механика ставок */
 function bet(s){
   if(over||busy)return;
   const cost=s==='%'?6:5;
@@ -1095,14 +1379,16 @@ function bet(s){
   if((s==='@'&&freeze)||(s==='!'&&boost>0)||(s==='%'&&steal))return log('Уже поставлено.','w');
   P.t-=cost;sfx.bet();
   if(s==='@')freeze=true;if(s==='!')boost+=5;if(s==='%')steal=true;
-  log('Ставка «'+s+'» принята. Казино довольно.','d');render();saveGame();
+  log('Ставка «'+s+'» принята. Казино довольно.','d');
+  if(checkLoss())return;
+  render();saveGame();
 }
 
 /* ============================================================
-   12. КОРЗИНА И КЕЙС
+   14. КОРЗИНА И КЕЙС
 ============================================================ */
 function rollCase(c){
-  let base=1+(Math.random()*20|0);
+  let base=1+(Math.random()*CFG.HAM.CAP|0);
   if(lastBinF===c.f){
     if(c.f==='ШЕЛ'&&lastBinDigit===c.d&&c.d<10){
       const nd=c.d+1;
@@ -1114,7 +1400,7 @@ function rollCase(c){
       }else log('Дикторы спаялись бы в «'+nd+'», но руке тесно.','w');
     }
     else if(c.f==='ШЕЛ'){base=Math.min(CFG.HAM.CAP,base+5);log('КОМБО ДИКТОРОВ: дуэт подкрутил кейс +5.','g')}
-    else if(c.f==='АРТ'){const r2=1+(Math.random()*20|0);base=Math.max(base,r2);
+    else if(c.f==='АРТ'){const r2=1+(Math.random()*CFG.HAM.CAP|0);base=Math.max(base,r2);
       log('КОМБО АРТЕФАКТОВ: кейс-мутант (лучший бросок).','g')}
     else if(c.f==='ЧРВ'){nestTurns=2;log('КОМБО ЧЕРВЕЙ: ГНЕЗДО — луна ×2 на 2 хода!','g')}
   }
@@ -1132,10 +1418,15 @@ function toBin(){
     sfx.f5();voice('ПЕРЕЗАГРУЗКА',.2,.8);
     log('⌨'+c.n+' УХОДИТ В КОРЗИНУ... РАУНД ПЕРЕЗАГРУЖЕН!','e');
     P.deck=mkDeck(true);E.deck=isBoss()?mkBossDeck(bossStage):mkDeck(false);
-    P.disc=[];E.disc=[];P.hand=[];E.hand=[];lastBinF='';lastBinDigit=0;
-    stats.last='—'; /* новый раунд — чистый лист */
+    P.disc=[];E.disc=[];P.hand=[];E.hand=[];lastBinF='';lastBinDigit=0;stats.last='—';
+    cage=[];shield=0;newCards.clear();
+    overflowBonus=0;
     draw(P,true);draw(E,false);slot('pslot',null);slot('eslot',null);
     $('dmg').textContent='ПЕРЕЗАГРУЗКА';render();return;
+  }
+  if(c.f==='МУС'){
+    sfx.junk();log('🗑 '+c.n+' выброшен навсегда. Рука свободна.','d');
+    draw(P,true);render();saveGame();return;
   }
   render();
   spinCase(rollCase(c),false);
@@ -1143,14 +1434,25 @@ function toBin(){
 function caseTest(){
   if(busy||over)return;
   ovShow('dbg',false);
-  spinCase(1+(Math.random()*20|0),true);
+  spinCase(1+(Math.random()*CFG.HAM.CAP|0),true);
+}
+function addHamster(ham){
+  const nh={pw:ham,hp:hamHP(ham)};
+  if(cage.length<CFG.HAM.CAGE_MAX){cage.push(nh);
+    log('🐹 Хомяк '+hamName(ham)+' ['+ham+'] занял место в вольере. ❤'+nh.hp+'.','d');}
+  else{
+    let wi=0;for(let i=1;i<cage.length;i++)if(cage[i].pw<cage[wi].pw)wi=i;
+    if(ham>cage[wi].pw){const old=cage[wi].pw;cage[wi]=nh;
+      log('🐹 '+hamName(ham)+' ['+ham+'] вытеснил '+hamName(old)+' ['+old+'].','d');}
+    else log('Вольер полон, и новенький слабее. Ушёл обратно.','w');
+  }
 }
 function spinCase(ham,test){
   caseTestMode=test;busy=true;
   if(!test)stats.cases++;
   render();
   const N=34,T=26,pool=[];
-  for(let i=0;i<N;i++)pool.push(i===T?ham:1+(Math.random()*20|0));
+  for(let i=0;i<N;i++)pool.push(i===T?ham:1+(Math.random()*CFG.HAM.CAP|0));
   const strip=$('casestrip');strip.innerHTML='';strip.style.transform='translateX(0px)';
   pool.forEach(v=>{const[co,tn]=tierInfo(v);
     const d=document.createElement('div');d.className='cslot';d.style.borderColor=co;
@@ -1175,19 +1477,25 @@ function caseFinish(ham){
   const[co,tn]=tierInfo(ham);
   if(caseTestMode){
     $('caseres').innerHTML='СТЕНД: выпал бы <span style="color:'+co+'">'+hamName(ham)+' ['+ham+'] · '+tn+'</span>';
-    log('🧪 Тестовый прокрут кейса: '+hamName(ham)+' ['+ham+'] ('+tn+'). Хомяк чисто виртуальный — твой настоящий не пострадал. Легендарка на стенде не выдаётся.','d');
+    log('🧪 Тестовый прокрут кейса: '+hamName(ham)+' ['+ham+'] ('+tn+'). Хомяк чисто виртуальный. Легендарка на стенде не выдаётся.','d');
   }else{
-    hamster=ham;stats.hams++;
+    stats.hams++;
     sfx.hamster();voice('ХОМЯК ПРИЗВАН',.9,1.1);announcer('hamster');
     $('caseres').innerHTML='ВЫПАЛ: <span style="color:'+co+'">'+hamName(ham)+' ['+ham+'] · '+tn+'</span>';
-    log('Из кейса вылез '+hamName(ham)+' ['+ham+'] ('+tn+').','d');
+    addHamster(ham);
     if(ham>=CFG.HAM.LEG_AT){
       const L=rnd(LEG),card=mkC(L[3],L[1],L[2],L[0],L[4]?{l:L[4]}:null);
-      if(P.hand.length<CFG.HAND_MAX){P.hand.push(card);
-        sfx.gold();burst('#d4a017');burst('#fff8dc'); /* золотой перезвон */
-        log('🎁 Хомяк высшей лиги притащил ЛЕГЕНДАРКУ: '+L[1]+'!','g');
-        voice('ЛЕГЕНДАРНАЯ КАРТА',.7,1)}
-      else log('Легендарка не влезла в руку и ушла в стеллаж.','w');
+      if(P.hand.length<CFG.HAND_MAX){P.hand.push(card);}
+      else{
+        let wi=-1,weak=Infinity;
+        P.hand.forEach((c,i)=>{if(c.f!=='F5'&&!c.l&&c.pw<weak){weak=c.pw;wi=i}});
+        if(wi>=0){const dropped=P.hand.splice(wi,1)[0];
+          log('Ради легендарки выброшен '+dropped.n+'.','w');}
+        P.hand.push(card);
+      }
+      sfx.gold();burst('#d4a017');burst('#fff8dc');
+      log('🎁 Хомяк высшей лиги притащил ЛЕГЕНДАРКУ: '+L[1]+'!','g');
+      voice('ЛЕГЕНДАРНАЯ КАРТА',.7,1);
     }
   }
   $('casebtn').style.display='inline-block';$('casehint').style.display='inline';
@@ -1196,51 +1504,55 @@ function caseFinish(ham){
   caseTimer=setTimeout(caseClose,2600);
 }
 function caseClose(){
-  clearTimeout(caseTimer);
-  caseTestMode=false;
+  clearTimeout(caseTimer);caseTestMode=false;
   ovShow('caseov',false);busy=false;draw(P,true);render();saveGame();
 }
 
 /* ============================================================
-   13. БОССЫ И КОНЕЦ
+   15. БОССЫ И КОНЕЦ
 ============================================================ */
 function checkLoss(){
   if(P.t<=0&&!over){over=true;clearSave();sfx.lose();voice('ПОРАЖЕНИЕ',.2,.8);
-    setOV('СИНИЙ ЭКРАН',(mode2?'Игрок 1 пал. ИГРОК 2 ПОБЕДИЛ.\nМета в дуэли не начисляется — только слава.'
-      :'Тики кончились.\nСистема предложила чай и перезагрузку.')+'\nМета-тики: '+META.tics,
+    faceReact('pface','die',700);
+    setOV('СИНИЙ ЭКРАН','Тики кончились.\nСистема предложила чай и перезагрузку.\nМета-тики: '+META.tics,
       '⌨ F5: заново',()=>location.reload());return true}
   return false;
 }
 function startBoss(st){
   bossStage=st;E={t:Emax(),deck:mkBossDeck(st),hand:[],disc:[]};draw(E,false);
-  syncEnemyLabel();slot('eslot',null);announcer('boss');render();
+  syncEnemyLabel();slot('eslot',null);announcer('boss');
+  log('☠ '+BOSS_NAME[st-1]+' входит в арену. Приготовься.','e');
+  render();
 }
 function checkEnd(){
+  if(checkLoss())return true;
   if(E.t<=0){
-    if(mode2){over=true;clearSave();sfx.win();burst('#0f0');burst('#d4a017');
-      setOV('ПОБЕДА ИГРОКА 1','Игрок 2 отправлен в синий экран.\nДуэль окончена. Слава не облагается налогом.',
-        '⌨ ЗАНОВО',()=>location.reload());return true}
+    faceReact('eface','die',700);
     if(bossStage===0){sfx.f5();modem();voice('МОДЕМ САТАНА ВЫХОДИТ ИЗ ДИАПАЗОНА',.1,.65);
-      setOV('БОСС-РАУНД 1/2','СКРИПТ-КИД отправлен в спам.\nИЗ ДИАПАЗОНА ВЫХОДИТ МОДЕМ-САТАНА:\n100 тиков · КРИК 56K каждый 3-й ход.',
+      setOV('БОСС-РАУНД 1/2','СКРИПТ-КИД отправлен в спам.\nИЗ ДИАПАЗОНА ВЫХОДИТ МОДЕМ-САТАНА:\n100 тиков · агрессивен · КРИК 56K каждый 3-й ход.',
         'ПРИНЯТЬ БОЙ',()=>{ovShow('ov',false);startBoss(1);saveGame();turnStart()});return true}
     if(bossStage===1){sfx.snort();sfx.snort();voice('ХРЮКАЮЩИЙ СЕРВЕР ПРОСНУЛСЯ',.1,.6);
-      setOV('БОСС-РАУНД 2/2','САТАНА ушёл в спам-фильтр.\nВ СТОЙКЕ ПРОСЫПАЕТСЯ ХРЮКАЮЩИЙ СЕРВЕР:\n130 тиков · ХРЮК −2 каждый 3-й ход.',
+      setOV('БОСС-РАУНД 2/2','САТАНА ушёл в спам-фильтр.\nВ СТОЙКЕ ПРОСЫПАЕТСЯ ХРЮКАЮЩИЙ СЕРВЕР:\n130 тиков · жадный · ХРЮК −2 каждый 3-й ход.',
         'ВРУБИТЬ СЕРВЕР',()=>{ovShow('ov',false);startBoss(2);saveGame();turnStart()});return true}
-    over=true;clearSave();sfx.win();burst('#0f0');burst('#d4a017');
+    over=true;
+    META.lastRun={turn,out:stats.out,inn:stats.inn,played:stats.played,hams:stats.hams,cases:stats.cases};
     const gain=15+Math.max(0,Math.round(P.t/5));
-    META.tics+=gain;saveJSON(CFG.META_KEY,META);updMeta();
+    META.tics+=gain;
+    saveJSON(CFG.META_KEY,META);
+    clearSave();
+    sfx.win();burst('#0f0');burst('#d4a017');updMeta();
     voice('ПОБЕДА',.3,.8);announcer('win');
     setOV('ПОБЕДА.EXE','ХРЮКАЮЩИЙ СЕРВЕР захрюкался навсегда.\nНАЧИСЛЕНО МЕТА-ТИКОВ: +'
       +gain+'\nТрать в ПУСК → МАГАЗИН: перки на следующий забег.','⌨ F5: новый забег',()=>location.reload());
     return true;
   }
-  return checkLoss();
+  return false;
 }
 
 /* ============================================================
-   14. RHYTHM.DLL
+   16. RHYTHM.DLL + переполнение тиков
 ============================================================ */
-function techno(cb){
+function techno(cb,test){
   if(tnActive)return;
   tnActive=true;busy=true;
   ovShow('tn',true);
@@ -1290,8 +1602,10 @@ function techno(cb){
       if(centerDelta(t)<=R.PERF){perfects++;$('tnpf').textContent=perfects;sfx.perfect();flash('pf',220)}
       else{sfx.bet();flash('hh',200)}
     }else if(pass!==usedPass){
-      dmgToPlayer(1,'промах диска');sfx.hurt();flash('ms',220);render();
-      if(P.t<=0){finish(true);return}
+      sfx.hurt();flash('ms',220);
+      if(!test){dmgToPlayer(1,'промах диска');
+        faceReact('pface','hurt');faceReact('eface','smug');render();
+        if(P.t<=0){finish(true);return}}
     }
   }
   const kh=e=>{if(e.code==='Space'){e.preventDefault();if(!e.repeat)press()}};
@@ -1304,11 +1618,20 @@ function techno(cb){
     removeEventListener('keydown',kh);document.removeEventListener('mousedown',md);
     ovShow('tn',false);busy=false;
     if(died){checkLoss();return}
-    if(hits>=6){P.t+=4;log('РИТМ-ДИСК: поймано '+hits+'/10. +4 тика.','d')}
-    else{dmgToPlayer(4,'смех сектора');log('РИТМ-ДИСК: всего '+hits+'/10. Сектор смеётся. −4 тика.','w')}
+    if(hits>=6){if(!test)P.t+=4;
+      log('РИТМ-ДИСК: поймано '+hits+'/10'+(test?' (тест)':'. +4 тика.'),'d')}
+    else{if(!test)dmgToPlayer(4,'смех сектора');
+      log('РИТМ-ДИСК: всего '+hits+'/10'+(test?' (тест)':'. Сектор смеётся. −4 тика.'),'w')}
     const pb=CFG.PERF_REWARD[perfects]||0;
-    if(pb){P.t+=pb;burst('#0ff');voice('ПЕРФЕКТ БОНУС ПЛЮС '+pb,.7,1.1);
-      log('🎯 PERFECT ×'+perfects+' → бонус +'+pb+' тиков. Диск доволен тобой.','g')}
+    if(pb){if(!test){P.t+=pb;burst('#0ff');voice('ПЕРФЕКТ БОНУС ПЛЮС '+pb,.7,1.1)}
+      log('🎯 PERFECT ×'+perfects+(test?' (тест)':' → бонус +'+pb+' тиков. Диск доволен тобой.'),'g')}
+    if(!test&&P.t>69){
+      const overflow=P.t-69;
+      const bonus=Math.floor(overflow/2);
+      P.t=69;
+      if(bonus>0){overflowBonus=bonus;
+        log('⚡ Переполнение тиков: +'+bonus+' к следующему удару.','g');}
+    }
     render();if(!checkLoss())cb();
   }
   tnRaf=requestAnimationFrame(frame);
@@ -1316,11 +1639,11 @@ function techno(cb){
 function technoTest(){
   if(busy||over||tnActive)return;
   ovShow('dbg',false);
-  techno(()=>log('Стенд ритм-диска завершён. Результат в лог, тики — по правилам диска.','d'));
+  techno(()=>log('Стенд ритм-диска завершён. Тики не тронуты.','d'),true);
 }
 
 /* ============================================================
-   15. ФОНОВЫЕ СИСТЕМЫ: ТУПНЯК, СКЕЙЛ, ЗАГРУЗКА
+   17. ФОНОВЫЕ СИСТЕМЫ: ТУПНЯК, СЕРДЦЕ, СКЕЙЛ, ЗАГРУЗКА
 ============================================================ */
 ['keydown','pointermove'].forEach(e=>addEventListener(e,()=>{
   idleT=Date.now();useless=0;$('ubr').style.width='0%'}));
@@ -1328,9 +1651,13 @@ setInterval(()=>{
   if(over||busy||OVS.some(o=>$(o).style.display==='block')||$('boot').style.display!=='none')return;
   if((Date.now()-idleT)/1000>5){useless+=10;$('ubr').style.width=Math.min(100,useless)+'%'}
   if(useless>=100){useless=0;$('ubr').style.width='0%';
-    dmgToPlayer(3,'тупняк');render();
-    log('СЧЁТЧИК БЕСПОЛЕЗНОСТИ = 100! '+rnd(QT)+' −3 тика.','w');checkLoss()}
+    dmgToPlayer(3,'тупняк');faceReact('pface','hurt');render();
+    log('СЧЁТЧИК ТУПНЯКА = 100! '+rnd(QT)+' −3 тика.','w');checkLoss()}
 },1000);
+setInterval(()=>{
+  if(over||busy||!SND.on||SET.epi)return;
+  if(P.t<=CFG.DANGER_AT&&P.t>0)sfx.heart();
+},900);
 function fit(){const s=Math.min(innerWidth/1920,innerHeight/1080),st=$('stage');
   st.style.transform='scale('+s+')';
   st.style.left=(innerWidth-1920*s)/2+'px';st.style.top=(innerHeight-1080*s)/2+'px'}
@@ -1346,7 +1673,7 @@ function finishBoot(){
       'НАЧАТЬ ЗАНОВО',()=>{ovShow('ov',false);clearSave();newRun();render();turnStart()});
   }else{newRun();render();turnStart()}
 }
-buildRoster();bindSet();applySet();updMeta();
+bindSet();applySet();updMeta();syncSndLabel();setFaces();
 let bootP=0;
 const bi=setInterval(()=>{
   bootP=Math.min(100,bootP+2+Math.random()*4);
